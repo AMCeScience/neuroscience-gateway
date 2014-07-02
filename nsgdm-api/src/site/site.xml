@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/DECORATION/1.4.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://maven.apache.org/DECORATION/1.4.0 http://maven.apache.org/xsd/decoration-1.4.0.xsd"
+name="NeuroScience Gateway Data Model (NSGDM) API">
+
+  <publishDate position="right" />
+  <version position="right" />
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.3.1</version>
+  </skin>
+  <custom>
+    <fluidoSkin>
+      <topBarEnabled>true</topBarEnabled>
+      <sideBarEnabled>true</sideBarEnabled>
+      <!-- <googlePlusOne />
+      <facebookLike /> -->
+    </fluidoSkin>
+  </custom>
+  <body>
+
+    <breadcrumbs>
+      <item name="NSGDM-API" href="index.html" />
+    </breadcrumbs>
+    <menu name="Overview">
+      <item name="Introduction" href="index.html"/>
+      <item name="Team" href="team-list.html"/>
+      <item name="Mailing List" href="mail-lists.html"/>
+      <item name="License" href="license.html"/>
+    </menu>
+    <menu name="Developers">
+      <item name="JavaDocs" href="apidocs/index.html"/>
+      <item name="Issue Tracking" href="issue-tracking.html"/>
+      <item name="Source" href="source-repository.html"/>
+      <item name="Dependency Info" href="dependency-info.html"/>
+      <item name="Distribution Management" href="distribution-management.html"/>
+    </menu>
+
+    <!--   <menu name="Project">
+    <item name="Project Info" href="project-info.html"/>
+    <item name="Project Reports" href="project-reports.html"/>
+    <item name="Summary" href="project-summary.html"/>
+    </menu>
+
+    <menu name="External">
+    <item name="External Dependencies" href="dependencies.html"/>
+    <item name="External Dependencies Management" href="dependency-management.html"/>
+    </menu> -->
+    <menu ref="reports"/>
+
+  </body>
+</project>

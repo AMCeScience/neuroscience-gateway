@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoints version="2.0" xmlns="http://java.sun.com/xml/ns/jax-ws/ri/runtime">
+  <endpoint implementation="nl.amc.biolab.pgportal.services.credential.CredentialProvider" name="CredentialProvider" url-pattern="/CredentialProvider"/>
+  <endpoint implementation="nl.amc.biolab.nsg.services.ProcessingManagerService" name="ProcessingManagerService" url-pattern="/ProcessingManagerService"/>
+  <endpoint implementation="hu.sztaki.lpds.pgportal.net.webservices.WorkflowStatusHandlerService" name="WorkflowStatusHandlerService" url-pattern="/WorkflowStatusHandlerService"/>
+</endpoints>

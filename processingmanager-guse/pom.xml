@@ -1,0 +1,255 @@
+<project
+		xmlns="http://maven.apache.org/POM/4.0.0"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		<modelVersion>4.0.0</modelVersion>
+
+		<groupId>nl.amc.biolab.pgportal</groupId>
+		<artifactId>processingmanager</artifactId>
+		<packaging>jar</packaging>
+		<version>1.5.7-SNAPSHOT</version>
+		<name>Processing Manager (gUSE)</name>
+		<url>http://maven.apache.org</url>
+
+		<properties>
+				<guse.version>3.5.2</guse.version>
+				<liferay.version>6.1.0</liferay.version>
+				<netbeans.hint.deploy.server>Tomcat</netbeans.hint.deploy.server>
+		</properties>
+
+		<dependencies>
+				<dependency>
+						<groupId>nl.amc.biolab</groupId>
+						<artifactId>nsgdm-api</artifactId>
+						<version>2.0.3-SNAPSHOT</version>
+						<scope>provided</scope>
+				</dependency>
+				<dependency>
+						<groupId>nl.amc.biolab</groupId>
+						<artifactId>BiolabUtils</artifactId>
+						<version>1.1</version>
+				</dependency>
+
+				<!-- Application Specific Module -->
+				<dependency>
+						<groupId>hu.sztaki.lpds.pgportal.services</groupId>
+						<artifactId>asm</artifactId>
+						<version>3.4.4-1</version>
+				</dependency>
+
+				<!--gUSE/WS-PGRADE communication libraries -->
+				<dependency>
+						<groupId>hu.sztaki.lpds.guse</groupId>
+						<artifactId>frontendbase</artifactId>
+						<version>${guse.version}</version>
+				</dependency>
+				<dependency>
+						<groupId>hu.sztaki.lpds.guse</groupId>
+						<artifactId>information_cli</artifactId>
+						<version>${guse.version}</version>
+				</dependency>
+				<dependency>
+						<groupId>hu.sztaki.lpds.guse</groupId>
+						<artifactId>wfs_cli</artifactId>
+						<version>${guse.version}</version>
+				</dependency>
+		  <dependency>
+		    <groupId>org.python</groupId>
+		    <artifactId>jython</artifactId>
+		    <version>2.5.3</version>
+		  </dependency>
+		</dependencies>
+
+		<build>
+				<plugins>
+
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-compiler-plugin</artifactId>
+								<version>2.5.1</version>
+								<configuration>
+										<source>1.6</source>
+										<target>1.6</target>
+								</configuration>
+						</plugin>
+
+						<plugin>
+								<artifactId>maven-resources-plugin</artifactId>
+								<version>2.6</version>
+								<configuration>
+										<encoding>UTF-8</encoding>
+								</configuration>
+						</plugin>
+
+						<!-- tells Maven to resolve all dependencies and their source + javadoc attachments -->
+						<!--
+								*** If you want to automatically refresh javadocs and sources:
+								change "dummy" in the phases below to "install"
+								*** If you want faster builds: use these commands whenever needed
+								mvn dependency:sources
+								mvn dependency:resolve -Dclassifier=javadoc
+						-->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-dependency-plugin</artifactId>
+								<version>2.8</version>
+								<executions>
+										<execution>
+												<id>install-sources</id>
+												<phase>dummy</phase>
+												<goals>
+														<goal>sources</goal>
+												</goals>
+										</execution>
+										<execution>
+												<id>install-javadocs</id>
+												<phase>dummy</phase>
+												<configuration>
+														<classifier>javadoc</classifier>
+												</configuration>
+												<goals>
+														<goal>resolve</goal>
+												</goals>
+										</execution>
+								</executions>
+						</plugin>
+
+						<!-- Attach sources and javadocs of artifacts with sources to eclipse -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-eclipse-plugin</artifactId>
+								<version>2.9</version>
+								<configuration>
+										<downloadSources>true</downloadSources>
+										<downloadJavadocs>true</downloadJavadocs>
+								</configuration>
+						</plugin>
+
+						<!--Generating Jar file -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-jar-plugin</artifactId>
+								<version>2.4</version>
+								<configuration>
+										<!-- <finalName>${project.artifactId}-${project.version}_r${buildNumber}_${timestamp}</finalName> -->
+										<finalName>${project.artifactId}-${project.version}</finalName>
+								</configuration>
+						</plugin>
+
+						<!-- Attach Java source to the build -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-source-plugin</artifactId>
+								<version>2.2.1</version>
+								<executions>
+										<execution>
+												<id>attach-sources</id>
+												<goals>
+														<goal>jar</goal>
+												</goals>
+										</execution>
+								</executions>
+						</plugin>
+
+						<!-- Attach Java Docs to the build -->
+						<plugin>
+								<groupId>org.apache.maven.plugins</groupId>
+								<artifactId>maven-javadoc-plugin</artifactId>
+								<version>2.9.1</version>
+								<executions>
+										<execution>
+												<id>attach-javadocs</id>
+												<goals>
+														<goal>jar</goal>
+												</goals>
+										</execution>
+								</executions>
+						</plugin>
+
+				</plugins>
+
+				<pluginManagement>
+						<plugins>
+								<plugin>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-site-plugin</artifactId>
+										<version>3.3</version>
+										<dependencies>
+												<dependency><!-- add support for ssh/scp -->
+														<groupId>org.apache.maven.wagon</groupId>
+														<artifactId>wagon-ssh</artifactId>
+														<version>1.0</version>
+												</dependency>
+										</dependencies>
+								</plugin>
+						</plugins>
+				</pluginManagement>
+
+		</build>
+		<!--
+				<repositories>
+				<repository>
+				<id>gUSE</id>
+				<name>gUSE Maven repository</name>
+				<url>http://guse.sourceforge.net/maven2/</url>
+				</repository>
+
+            </repositories>
+    -->
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+                <version>2.7</version>
+                <reportSets>
+                    <reportSet>
+                        <reports>
+                            <report>index</report>
+                            <report>summary</report>
+                            <report>dependency-info</report>
+                            <report>distribution-management</report>
+                            <report>issue-tracking</report>
+                            <report>project-team</report>
+                            <report>mailing-list</report>
+                            <report>dependencies</report>
+                            <report>dependency-management</report>
+                            <report>scm</report>
+                            <report>license</report>
+                            <!-- <report>modules</report> -->
+                            <!-- <report>dependency-convergence</report> -->
+                            <!-- <report>cim</report> -->
+                            <!-- <report>help</report> -->
+                            <!-- <report>plugin-management</report> -->
+                            <!-- <report>plugins</report> -->
+                        </reports>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <!-- <configuration>
+                <show>public</show>
+                </configuration> -->
+            </plugin>
+        </plugins>
+    </reporting>
+		<distributionManagement>
+				<site>
+						<id>orange.ebioscience.amc.nl</id>
+						<url>scp://dev.ebioscience.amc.nl/var/www/html/docs/pm/</url>
+				</site>
+				<snapshotRepository>
+						<id>snapshots</id>
+						<url>http://orange.ebioscience.amc.nl/nexus/content/repositories/snapshots</url>
+				</snapshotRepository>
+				<repository>
+						<id>releases</id>
+						<url>http://orange.ebioscience.amc.nl/nexus/content/repositories/releases</url>
+				</repository>
+		</distributionManagement>
+</project>

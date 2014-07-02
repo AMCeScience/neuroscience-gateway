@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+		xmlns="http://www.springframework.org/schema/beans"
+		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xmlns:c="http://www.springframework.org/schema/c"
+		xmlns:p="http://www.springframework.org/schema/p"
+		xmlns:context="http://www.springframework.org/schema/context"
+		xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+		<!-- import the dataSource definition -->
+		<import resource="ecatContext-dataSource.xml" />
+
+		<!-- Configurer that replaces ${...} placeholders with values from a properties
+				file (in this case, Hibernate-related settings for the sessionFactory definition
+				below) -->
+		<context:property-placeholder location="classpath:hibernate.properties" />
+
+		<!-- Hibernate SessionFactory -->
+		<bean
+				id="sessionFactory"
+				class="org.springframework.orm.hibernate4.LocalSessionFactoryBean"
+				p:dataSource-ref="dataSource">
+
+				<!-- <property name="configurationClass"> <value>org.hibernate.cfg.AnnotationConfiguration</value>
+						</property> -->
+
+				<property name="hibernateProperties">
+						<props>
+								<prop key="hibernate.dialect">${hibernate.dialect}</prop>
+								<prop key="hibernate.show_sql">${hibernate.showSql}</prop>
+								<prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+						</props>
+				</property>
+
+				<!-- Scan class by class -->
+				<!-- <property name="annotatedClasses">
+						<list>
+						<value>nl.amc.ebioscience.ecat.model.Application</value>
+						</list>
+						</property> -->
+
+				<!-- Scan a whole package -->
+				<property name="packagesToScan">
+						<list>
+								<value>nl.amc.ebioscience.ecat.model</value>
+						</list>
+				</property>
+
+		</bean>
+
+		<!-- Transaction manager for a single Hibernate SessionFactory (alternative to
+				JTA) -->
+		<bean
+				id="transactionManager"
+				class="org.springframework.orm.hibernate4.HibernateTransactionManager"
+				p:sessionFactory-ref="sessionFactory" />
+
+		<!-- Transaction manager that delegates to JTA (for a transactional JNDI DataSource) -->
+		<!-- <bean id="transactionManager" class="org.springframework.transaction.jta.JtaTransactionManager"/> -->
+
+		<!-- EBioinfraGateway's central data access object: Hibernate implementation -->
+		<bean
+				id="ecatDataAccess"
+				class="nl.amc.ebioscience.ecat.hibernate.HibernateEcatDataAccess" />
+
+</beans>

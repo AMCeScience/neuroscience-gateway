@@ -1,0 +1,43 @@
+/*
+ * Neuroscience Gateway Proof of Concept/Research Portlet
+ * This application was developed for research purposes at the Bioinformatics Laboratory of the AMC (The Netherlands)
+ *
+ * Copyright (C) 2013 Bioinformatics Laboratory, Academic Medical Center of the University of Amsterdam
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package nl.amc.biolab.nsg.display.data;
+
+import nl.amc.biolab.nsgdm.SubmissionIO;
+
+/**
+ * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
+ *
+ */
+public class DisplayProcessingOutput extends SubmissionIO {
+	public DisplayProcessingOutput() {
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * @param sio
+	 */
+	public DisplayProcessingOutput(SubmissionIO sio) {
+		setDbId(sio.getDbId());
+		setSubmission(sio.getSubmission());
+		setDataElement(sio.getDataElement());
+		setPort(sio.getPort());
+		setType(sio.getType());
+	}
+
+}

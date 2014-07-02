@@ -1,0 +1,13 @@
+NSG 1.1
+=======
+
+Upgrade from 1.0 to 1.1:
+
+	Database upgrade:
+		the upgrade requires to run script upgrade_db_1.0_1.1.sql. The scripts:
+		- creates new UserAuthentication table WARNING: it will remove any previous existing table with the same name!
+		- adds field Size to table DataElement
+		- creates two triggers
+
+	XNAT synchronisation:
+		the XNAT sync now requires a list of the LifeRay IDs of the users to perform the sync.

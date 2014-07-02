@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<!-- Document : hibernate.cfg.xml Created on : 26 November 2012, 16:59 Author 
+	: a.benabdelkader@amc.uva.nl Description: Purpose of the document follows. -->
+<hibernate-configuration>
+	<session-factory>
+		<!-- Database connection settings -->
+		<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/neuroscience</property>
+		<property name="hibernate.connection.username">compNSG</property>
+		<property name="hibernate.connection.password">NSG!@comp#</property>
+		<!-- JDBC connection pool (use the built-in) -->
+		<property name="hibernate.c3p0.min_size">5</property>
+		<property name="hibernate.c3p0.max_size">20</property>
+		<property name="hibernate.c3p0.timeout">1800</property>
+		<property name="hibernate.c3p0.max_statements">50</property>
+		
+	<!--property name="automaticTestTable">UserActivity</property>
+	<property name="testConnectionOnCheckin">true</property>
+	<property name="idleConnectionTestPeriod">60</property--> <!--  in Seconds -->
+	
+		<!--<property name="connection.pool_size">1</property> -->
+		<!-- SQL dialect -->
+		<property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+ 		<property name="hibernate.query.factory_class">org.hibernate.hql.ast.ASTQueryTranslatorFactory</property>
+		<!-- Enable Hibernate's automatic session context management -->
+		<property name="current_session_context_class">thread</property>
+		<!-- Disable the second-level cache -->
+		<property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+		<property name="hibernate.cache.use_second_level_cache">false</property>
+		<!-- Echo all executed SQL to stdout -->
+		<!--<property name="show_sql">true</property> -->
+		<!-- Drop and re-create the database schema on startup -->
+		<!--property name="hbm2ddl.auto">update</property-->
+		<!--property name="hbm2ddl.import_file">removefk.sql</property-->
+		<mapping resource="nsgdm.hbm.xml" />
+	</session-factory>
+</hibernate-configuration>
