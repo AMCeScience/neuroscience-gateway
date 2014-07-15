@@ -56,4 +56,5 @@ Further documentation and contact info
 Official NeuroScience Gateway documentation
 https://neuro.ebioscience.amc.nl/portal/web/nsg/documentation
 
-For further information and details, contac us at: support-nsg[at]ebioscience[dot]amc[dot]nl
+For further information and details, contac us at: 
+`support-nsg[at]ebioscience[dot]amc[dot]nl`
