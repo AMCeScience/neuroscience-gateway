@@ -51,6 +51,9 @@ Configuring Liferay
 2. Choose one of the Liferay sites and create a new page
 3. Insert a `nsg-portal` porlet in the new page
 
-Further documentation
----------------------
+Further documentation and contact info
+--------------------------------------
+Official NeuroScience Gateway documentation
+https://neuro.ebioscience.amc.nl/portal/web/nsg/documentation
 
+For further information and details, contac us at: support-nsg[at]ebioscience[dot]amc[dot]nl
