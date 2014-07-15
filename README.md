@@ -5,7 +5,7 @@ Introduction
 ------------
 The NeuroScience Gateway is a Liferay portlet aimed to work together with gUSE/WSPGRADE. It provides access to distributed computing resources (grid, PBS, SGE, ...) to neuroscientists working with MRI scans.
 
-Componentes
+Components
 -----------
 * amc-theme: Liferay theme for AMC
 * ecat
