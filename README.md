@@ -1,5 +1,5 @@
-neuroscience-gateway
-====================
+NeuroScience Gateway Portlet
+============================
 
 Introduction
 ------------
