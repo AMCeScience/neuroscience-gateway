@@ -12,9 +12,38 @@ Requirements
 ------------
 * gUSE/WSPGRADE 3.6.1 or later
 * UMD2/3 middleware: gLite, MyProxy, lcg_utils, ...
+* XNAT 1.6
 * MySQL 5.1
 * cURL
 
+Database creation
+-----------------
+The portlet requires a user and scheme on a MySQL server.
+
 Building .war file
 ------------------
-1. Get the latest source code
+1. Get the latest source code 
+`git clone https://github.com/AMCeScience/neuroscience-gateway.git neuro`
+2. Generate portal-nsg.war file using Maven
+```
+cd neuro/nsg-portlet
+mvn -s ../ebioinfra.settings.xml package
+```
+3. The resulting `portal-nsg.war` file can be found on `neuro/nsg-portlet/target`
+
+Deploying the portlet
+---------------------
+1. Log in Liferay using and admin/privileged account
+2. Go to Control Panel / Plugin Installation / Install more portlets / Upload file
+3. Upload the `portal-nsg.war` file
+4. Restart Liferay
+
+Configuring Liferay
+-------------------
+1. Using a Liferay admin account and the control panel, create a `NSG Admin` role
+2. Choose one of the Liferay sites and create a new page
+3. Insert a `nsg-portal` porlet in the new page
+
+Further documentation
+---------------------
+
