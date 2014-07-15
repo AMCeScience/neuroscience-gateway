@@ -7,6 +7,13 @@ The NeuroScience Gateway is a Liferay portlet aimed to work together with gUSE/W
 
 Componentes
 -----------
+* amc-theme: Liferay theme for AMC
+* ecat
+* liferay-sites: predefined Liferay site for AMC NeuroScience Gateway 
+* nsg-portlet: NeuroScience Gateway portlet source code
+* nsg-tools: auxiliary scripts and debugging tools
+* nsgdm-api: synchronisation tools for the data backend
+* processingmanager-guse
 
 Requirements
 ------------
