@@ -26,7 +26,7 @@ pass=$4
 if [ x$user = x ]; then
   curl -f -o "$dst" --request GET "$src"
 else 
-  curl -f --user $user:$pass -o "$dst" --request GET "$src"
+  curl -f --user $user:$pass -o "$dst" -G "$src"
 fi
 
 
