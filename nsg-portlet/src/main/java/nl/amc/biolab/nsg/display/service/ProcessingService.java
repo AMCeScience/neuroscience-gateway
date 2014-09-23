@@ -20,10 +20,9 @@ package nl.amc.biolab.nsg.display.service;
 
 import java.util.ArrayList;
 
+import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.nsg.ProcessingManager;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Error;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -36,16 +35,16 @@ public class ProcessingService {
 	Logger logger = Logger.getLogger(ProcessingService.class);
 
 	protected UserDataService userDataService;
-        protected ProcessingManager processingManager = new ProcessingManager();
-	
+	protected ProcessingManager processingManager = new ProcessingManager();
+
 	public ProcessingService() {
 	}
-	
+
 	public ProcessingService(UserDataService userDataService) {
 		logger.setLevel(Level.DEBUG);
 		this.userDataService = userDataService;
 	}
-	
+
 	/**
 	 * 
 	 * @param prjID
@@ -56,16 +55,22 @@ public class ProcessingService {
 	 * @param description
 	 * @return processing dbId
 	 */
-	public Long submit(Long prjID, Long appID, int appType, ArrayList<ArrayList<Long>> filesPerPorts, Long catUserID, Long liferayUserID, String description) {
+	public Long submit(Long prjID, Long appID, int appType,
+			ArrayList<ArrayList<Long>> filesPerPorts, Long catUserID,
+			Long liferayUserID, String description) {
 		Long dbId = null;
 		try {
-//			userDataService.closeSession();
-			logger.debug("call processingManager submit appID " + appID + " nr ports " + filesPerPorts.size() + " nr port 0 input " + filesPerPorts.get(0).size());
-			dbId = processingManager.submit(prjID, appID, filesPerPorts, catUserID, Long.toString(liferayUserID), description, userDataService.getProcessingPersistance()); 
-		} catch(Exception e) {
+			// userDataService.closeSession();
+			logger.debug("call processingManager submit appID " + appID
+					+ " nr ports " + filesPerPorts.size() + " nr port 0 input "
+					+ filesPerPorts.get(0).size());
+			// TODO dbId = processingManager.submit(prjID, appID, filesPerPorts,
+			// catUserID, Long.toString(liferayUserID), description,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 		return dbId;
 	}
@@ -75,39 +80,46 @@ public class ProcessingService {
 	 * @param processing
 	 * @param userId
 	 * @param liferayUserID
-	 * @param refresh processing status
+	 * @param refresh
+	 *            processing status
 	 * @return
 	 */
-	public DisplayProcessingStatus getProcessingStatus(Processing processing, Long userId, Long liferayUserID, boolean refresh) {
-		logger.info("liferayUserID " + liferayUserID + "/Processing " + processing + "/ processing " + ((processing != null) ? processing.getDbId() : "null"));
+	public DisplayProcessingStatus getProcessingStatus(Processing processing,
+			Long userId, Long liferayUserID, boolean refresh) {
+		logger.info("liferayUserID " + liferayUserID + "/Processing "
+				+ processing + "/ processing "
+				+ ((processing != null) ? processing.getDbId() : "null"));
 		DisplayProcessingStatus processingStatus = new DisplayProcessingStatus();
 		processingStatus.setProcessing(processing);
 		String status = "";
 		try {
-//			userDataService.closeSession();
-			if(refresh) {
-				processingManager.updateStatus(processing.getDbId(), userDataService.getProcessingPersistance());
+			// userDataService.closeSession();
+			if (refresh) {
+				// TODO processingManager.updateStatus(processing.getDbId(),
+				// userDataService.getProcessingPersistance());
 			}
 			status = processing.getStatus();
-		} catch(Exception e) {
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 		processingStatus.setStatus(status);
-		
+
 		try {
-			processingStatus.setSubmissionIOs(userDataService.getSubmissionIO(processing.getDbId()));
+			processingStatus.setSubmissionIOs(userDataService
+					.getSubmissionIO(processing.getDbId()));
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
 		}
-	
+
 		return processingStatus;
-		
+
 	}
-	
-	public Error getSubmissionError(long submissionId) {
+
+	public nl.amc.biolab.datamodel.objects.Error getSubmissionError(
+			long submissionId) {
 		return userDataService.getSubmissionError(submissionId);
 	}
 
@@ -117,80 +129,85 @@ public class ProcessingService {
 	 * @param userId
 	 * @param liferayUserID
 	 */
-	public void resubmit(long processingDbId, long submissionDbId, Long userId, Long liferayUserID) {
+	public void resubmit(long processingDbId, long submissionDbId, Long userId,
+			Long liferayUserID) {
 		try {
-//			userDataService.closeSession();
-			processingManager.resubmit(processingDbId, submissionDbId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// userDataService.closeSession();
+			// TODO processingManager.resubmit(processingDbId, submissionDbId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 	}
-	
+
 	public void resubmit(long processingDbId) {
 		try {
-//			userDataService.closeSession();
-			processingManager.resubmit(processingDbId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// userDataService.closeSession();
+			// TODO processingManager.resubmit(processingDbId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param submissionDbId
-	 * @param text with fail remarks
+	 * @param text
+	 *            with fail remarks
 	 */
 	public void markFailed(long submissionDbId, String text) {
 		try {
-//			userDataService.closeSession();
-			processingManager.markFailed(submissionDbId, text, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.markFailed(submissionDbId, text,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
 		}
 	}
 
-        public void markFailed(long processingId) {
+	public void markFailed(long processingId) {
 		try {
-			processingManager.markFailed(processingId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.markFailed(processingId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
-        public void restart(long processingId) {
+	public void restart(long processingId) {
 		try {
-			processingManager.restart(processingId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.restart(processingId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
-        public void shutdown() {
-            processingManager.shutdown();
-        }
-//
-//    private String getStatus(Processing processing) {
-//                HashMap<String, Integer> map = new HashMap();
-//                for (Submission sub:processing.getSubmissions()) {
-//                    final String subStatus = sub.getStatus();
-//                    if (map.containsKey(subStatus)) {
-//                        map.put(subStatus, new Integer(map.get(subStatus)+1));
-//                    } else {
-//                        map.put(subStatus, new Integer(1));
-//                    }
-//                }
-//                StringBuffer statusSummary = new StringBuffer();
-//                for (String aStatus : map.keySet()) {
-//                    statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
-//                }
-//                final int length = statusSummary.length();
-//                if (length<3) return "No Submissions";
-//		return statusSummary.substring(0, length-2);
-//     }
+	public void shutdown() {
+		processingManager.shutdown();
+	}
+	//
+	// private String getStatus(Processing processing) {
+	// HashMap<String, Integer> map = new HashMap();
+	// for (Submission sub:processing.getSubmissions()) {
+	// final String subStatus = sub.getStatus();
+	// if (map.containsKey(subStatus)) {
+	// map.put(subStatus, new Integer(map.get(subStatus)+1));
+	// } else {
+	// map.put(subStatus, new Integer(1));
+	// }
+	// }
+	// StringBuffer statusSummary = new StringBuffer();
+	// for (String aStatus : map.keySet()) {
+	// statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
+	// }
+	// final int length = statusSummary.length();
+	// if (length<3) return "No Submissions";
+	// return statusSummary.substring(0, length-2);
+	// }
 }

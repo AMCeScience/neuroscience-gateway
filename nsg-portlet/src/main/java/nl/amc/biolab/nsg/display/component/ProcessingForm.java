@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Processing;
-
-import org.apache.log4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -61,12 +59,12 @@ public class ProcessingForm extends Form {
 
 	protected static final String SUBMIT = "start";
 
-	private static Logger logger = Logger.getLogger(ProcessingForm.class);
+//	private static Logger logger = Logger.getLogger(ProcessingForm.class);
 
 	private VerticalLayout layout = new VerticalLayout();
 	private Select app = new Select();
 	private TextField name = new TextField("name");
-	private TextField param = new TextField("parameters");
+//	private TextField param = new TextField("parameters");
 	private ListSelect inputData = new ListSelect();
 	private LabelField appDescription;
 
@@ -251,6 +249,7 @@ public class ProcessingForm extends Form {
 		delButton.setWidth("-1px");
 		delButton.setHeight("-1px");
 		delButton.addListener(new Button.ClickListener() {
+			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
 				if(inputData.getValue() != null) {
 					for(DataElement de: (Set<DataElement>) inputData.getValue() ) {

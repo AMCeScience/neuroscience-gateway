@@ -19,11 +19,17 @@
 package nl.amc.biolab.nsg.display.component;
 
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Project;
+import nl.amc.biolab.datamodel.objects.User;
 
 import org.apache.log4j.Logger;
 
@@ -31,11 +37,6 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Table;
-import java.text.SimpleDateFormat;
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Project;
-import nl.amc.biolab.nsgdm.User;
 
 /**
  * 
@@ -89,7 +90,7 @@ public class ItemList<T> extends Table {
 		}
         
         setItemDescriptionGenerator(new ItemDescriptionGenerator() {
-            @Override
+			@Override
             public String generateDescription(Component source, Object itemId, Object propertyId) {
                 if (! (itemId instanceof Processing)){
                     return null;
@@ -107,7 +108,7 @@ public class ItemList<T> extends Table {
                 } else if ("status".equals(propertyId)) {
                     return ((Processing) itemId).getStatus();
                 } else if ("user".equals(propertyId)) {
-                    final User owner = ((Processing) itemId).getUsers().iterator().next();
+                    final User owner = ((Processing) itemId).getUser();
                     String user = owner.getFirstName() + " " + owner.getLastName();
                     return user;
                 }  

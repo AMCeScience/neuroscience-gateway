@@ -20,7 +20,6 @@ package nl.amc.biolab.nsg.display.component;
 
 import org.vaadin.addon.customfield.CustomField;
 
-import com.vaadin.data.util.NestedMethodProperty;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;

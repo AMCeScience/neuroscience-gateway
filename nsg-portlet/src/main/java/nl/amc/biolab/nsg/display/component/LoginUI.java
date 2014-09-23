@@ -18,10 +18,10 @@
  */
 package nl.amc.biolab.nsg.display.component;
 
+import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.control.MainControl;
-import nl.amc.biolab.nsg.display.service.UserDataService;
-import nl.amc.biolab.nsgdm.User;
+import nl.amc.biolab.xnat.tools.ErrorMessages;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +68,7 @@ public class LoginUI extends CustomComponent {
 			private static final long serialVersionUID = -6535226372165482804L;
 			public void buttonClick(ClickEvent event) {
 				User user = null;
-				String message = null;
+//				String message = null;
 				user = login((String) xnatPassword.getValue());
 				xnatPassword.setValue("");
 				if (user == null) {
@@ -100,13 +100,15 @@ public class LoginUI extends CustomComponent {
 			return null;
 		}
 //		app.setUserDataService(screenName, liferayId, false);
-		String message = null;
+//		String message = null;
 		try{
 			app.getUserDataService().setPassword(password);
 			app.getUserDataService().xnatLogin();
 //			app.setUserDataService(screenName, liferayId, true);
 		} catch (Exception e) {
-			if (e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD)) {
+			ErrorMessages errors = new ErrorMessages();
+			
+			if (e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword())) {
 				app.getMainWindow().showNotification("Please (re)enter your XNAT password");
 				return null;
 			}

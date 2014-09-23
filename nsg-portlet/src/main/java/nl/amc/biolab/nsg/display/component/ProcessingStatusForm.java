@@ -18,23 +18,30 @@
  */
 package nl.amc.biolab.nsg.display.component;
 
-import com.vaadin.Application;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Status;
+import nl.amc.biolab.datamodel.objects.Submission;
+import nl.amc.biolab.datamodel.objects.SubmissionIO;
 import nl.amc.biolab.nsg.ProcessingStatus;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
 import nl.amc.biolab.nsg.display.service.ProcessingService;
 import nl.amc.biolab.nsg.display.service.UserDataService;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Error;
-import nl.amc.biolab.nsgdm.SubmissionIO;
 
+import org.apache.log4j.Logger;
+
+import com.vaadin.Application;
 import com.vaadin.terminal.StreamResource;
 import com.vaadin.terminal.StreamResource.StreamSource;
 import com.vaadin.ui.Button;
@@ -44,19 +51,11 @@ import com.vaadin.ui.Embedded;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
-import com.vaadin.ui.ListSelect;
 import com.vaadin.ui.NativeButton;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadin.ui.Window;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Status;
-import nl.amc.biolab.nsgdm.Submission;
-import org.apache.log4j.Logger;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
@@ -65,11 +64,6 @@ import org.apache.log4j.Logger;
 class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
     private static final long serialVersionUID = -3761299542545869266L;
-
-    //text for testign html view
-//    private static final String textInHtml = "<html> <head> <title>Neuroscience Gateway: Data History</title> <script type=\"application/javascript\"> <!-- 	document.write('Hello World!'); var ctx; var canvas; var w = 250; var h = 120; var cw = 500; var cx, cy; var idx = -1; var r = 50; var ch = 373; var ins = [3]; var links = [3]; var ys = [3]; var xs = [3]; var nlinks = 3; xs[0] = 33; ys[0] = 48; links[0] = \"http://mri-neutrino.amc.nl:8080/xnatZ0/data/archive/projects/test/subjects/012/experiments/xnatZ0_E00283/reconstructions/DTIPreprocessing_V1_0_NSG36/out/files/012.Recon.301.ZIP\"; txts[0] = \"output-DTIPreprocessing V1.0_NSG36\"; xs[1] = 33; ys[1] = 168; txts[1] = DTIPreprocessing_V1_0_NSG_351_2013-12-12-165017; xs[2] = 33; ys[2] = 288; links[2] = \"http://mri-neutrino.amc.nl:8080/xnatZ0/data/experiments/xnatZ0_E00283/scans/301/resources/DICOM/files?format=zip\"; txts[2] = \"012.DTI_64 b1000.301.DICOM\"; function draw() { canvas = document.getElementById(\"canvas\"); if (!canvas.getContext) { return; } ctx = canvas.getContext(\"2d\"); ctx.canvas.width = cw; ctx.canvas.height = ch; canvas.addEventListener(\"mousemove\", on_mousemove, false); canvas.addEventListener(\"click\", on_click, false); ctx.save(); for (var i=0;i<cw*ch/10000;++i) randomCircle(ctx,'#f7f3f7'); var start = 0; var end = 0; end = drawEllipse(ctx, 10, 10, w+6, h/2+6,'#ffffcc'); end = drawEllipse(ctx, 13, 13, w, h/2,'#ffffcc'); drawText(ctx, 33, 48,'#000000', 'output-DTIPreprocessing V1.0_NSG36'); drawText2(ctx, 13, 13,'#0099ff', 'Subject ID: 012'); drawText2(ctx, 13, 25,'#0099ff', 'Scan ID: 301'); drawText2(ctx, 13, 49,'#0099ff', 'Data Type: Recon DTIPreprocessing V1.0'); drawText2(ctx, 13, 61,'#0099ff', 'Data Format: ZIP'); drawText2(ctx, 13, 73,'#0099ff', 'Creation Date: 2013-12-12 20:00:21.0'); drawText3(ctx, 13, 13,'#0099ff', 'Data ID: 480'); start = rectangle(ctx, 13, 133, '#33ff00'); drawText(ctx, 33, 168,'#000000', 'DTIPreprocessing V1.0'); drawText3(ctx, -17, 133,'#0099ff', 'Version: null'); drawText2(ctx, 13, 133,'#0099ff', 'Submission Date: 2013-12-12 16:50:17.0'); drawText2(ctx, 13, 145,'#0099ff', 'Submitter: Ammar Benabdelkader'); drawText2(ctx, 13, 169,'#0099ff', 'Start Date: 2013-12-12 16:50:17.0'); drawText2(ctx, 13, 181,'#0099ff', 'End Date: 2013-12-12 20:00:21.0'); drawText2(ctx, 13, 193,'#0099ff', 'Description: DTI prep by ammar'); ctx.lineWidth = 1; ctx.fillStyle = ctx.strokeStyle = '#990000'; arrow(ctx,start,end,5); end = drawEllipse(ctx, 13, 253, w, h/2,'#ffffcc'); drawText(ctx, 33, 288,'#000000', '012.DTI_64 b1000.301.DICOM'); arrow2(ctx,end,5); drawText2(ctx, 13, 253,'#0099ff', 'Subject ID: 012'); drawText2(ctx, 13, 265,'#0099ff', 'Scan ID: 301'); drawText2(ctx, 13, 289,'#0099ff', 'Data Type: DTI_64 b1000'); drawText2(ctx, 13, 301,'#0099ff', 'Data Format: DICOM'); drawText2(ctx, 13, 313,'#0099ff', 'Creation Date: 2013-04-12 12:47:20.0'); drawText3(ctx, 13, 253,'#0099ff', 'Data ID: 413'); } function arrow(ctx,p1,p2,size){ ctx.beginPath(); ctx.fillStyle = '#990000' ctx.lineCap = 'round'; ctx.moveTo(p1.x+w/2, p1.y); ctx.lineTo(p1.x+w/2,p2.y+h/2);  ctx.stroke(); ctx.moveTo(p1.x+w/2,p2.y+h/2); ctx.lineTo(p1.x+w/2-size, p2.y+h/2+size*2.5); ctx.lineTo(p1.x+w/2+size, p2.y+h/2+size*2.5); ctx.closePath(); ctx.fill(); } function arrow2(ctx,p1,size){ ctx.beginPath(); ctx.fillStyle = '#990000' ctx.lineCap = 'round'; ctx.moveTo(p1.x+w/2, p1.y-h/2); ctx.lineTo(p1.x+w/2, p1.y); ctx.stroke(); ctx.moveTo(p1.x+w/2, p1.y-h/2); ctx.lineTo(p1.x+w/2-size, p1.y-h/2+size*2.5); ctx.lineTo(p1.x+w/2+size, p1.y-h/2+size*2.5); ctx.closePath(); ctx.fill(); } function rectangle(ctx,x, y, color){ ctx.fillStyle = color; ctx.fillRect(x,y,w,h/2); ctx.strokeRect(x,y,w,h/2); ctx.fillStyle = '#FFFFFF'; ctx.font = \"24px Arial\"; return {x:x,y:y}; } function drawText(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"bold 12px Verdana\";  ctx.fillText(txt,x,y); ctx.fillStyle = '#00000'; } function drawText2(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"13px Calibri\"; ctx.fillText('- ' + txt,x+w+5,y+10); } function drawText3(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"13px Calibri\"; ctx.fillText('- ' + txt,x+50,y+h/2-8); } function circle(ctx,x,y, color){ ctx.beginPath(); ctx.arc(x, y, 50, 0, 20, false); ctx.fillStyle = color; ctx.fill(); ctx.stroke(); return {x:x,y:y}; } function circle(ctx,x,y, color){ ctx.save(); ctx.beginPath(); ctx.arc(x+w/2, y, 50, 0, Math.PI * 2, false); ctx.fillStyle = color; ctx.fill(); ctx.stroke(); return {x:x,y:y}; } function randomCircle(ctx,color){ ctx.save(); ctx.beginPath(); ctx.arc( Math.round(Math.random()*(ctx.canvas.width - 100) + 50), Math.round(Math.random()*(ctx.canvas.height - 100) + 50), Math.random()*20 + 10, 0, Math.PI * 2, false ); ctx.fillStyle = color; ctx.fill(); ctx.restore(); } function drawEllipse(ctx, x, y, w, h, color) { var kappa = .5522848, ox = (w / 2) * kappa, oy = (h / 2) * kappa, xe = x + w, ye = y + h, xm = x + w / 2, ym = y + h / 2; ctx.beginPath(); ctx.moveTo(x, ym); ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y); ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym); ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye); ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym); ctx.fillStyle = color; ctx.fill(); ctx.closePath(); ctx.stroke(); return {x:x,y:y}; } function on_click(e) { if (idx>=0) { window.location = links[idx]; } } function on_mousemove (ev) { var x, y;  if (ev.layerX || ev.layerX == 0) { x = ev.layerX; y = ev.layerY; } else if (ev.offsetX || ev.offsetX == 0) {  x = ev.offsetX; y = ev.offsetY; }  ctx.font = \"12px sans-serif\"; ctx.fillStyle = \"rgba(0, 128, 0, 1.0)\"; var str = x.toString() + \",\" + y.toString(); ctx.clearRect (0, 0, 60, 15); ctx.fillText(str, 0, 10); for(i=0; i<nlinks; i++) { var tw = 200; var th = 10;  if ( (x>=(xs[i]) && x<=(xs[i]+tw)) && (y>=(ys[i]-th) && y<=(ys[i])) ) { if (!ins[i]) { document.body.style.cursor = \"pointer\";  ins[i] = true; idx = i; } } else { if (ins[i]) { ins[i] = false; document.body.style.cursor = \"\"; } } } } --> </script> </head><body onload=\"javascript:draw();\">hello<div id=\"wrap\">wrap</div><canvas id=\"canvas\" width=\"1\" height=\"1\">canvas</canvas>bye</body></html>";
-//    private static final String textInHtml = "<html> <head> <TITLE>Neuroscience Gateway: Data History</title> <style type=\"text/css\"> body { background:#eee; margin:2em 4em; text-align:center; } canvas { background:#fff; border:1px solid #666 } </style> <script type=\"application/javascript\"> <!-- var ctx; var canvas; var w = 250; var h = 120; var cw = 500; var cx, cy; var idx = -1; var r = 50; var ch = 373; var ins = [3]; var links = [3]; var ys = [3]; var xs = [3]; var nlinks = 3; xs[0] = 33; ys[0] = 48; links[0] = \"http://mri-neutrino.amc.nl:8080/xnatZ0/data/archive/projects/test/subjects/012/experiments/xnatZ0_E00283/reconstructions/DTIPreprocessing_V1_0_NSG36/out/files/012.Recon.301.ZIP\"; txts[0] = \"output-DTIPreprocessing V1.0_NSG36\"; xs[1] = 33; ys[1] = 168; txts[1] = DTIPreprocessing_V1_0_NSG_351_2013-12-12-165017; xs[2] = 33; ys[2] = 288; links[2] = \"http://mri-neutrino.amc.nl:8080/xnatZ0/data/experiments/xnatZ0_E00283/scans/301/resources/DICOM/files?format=zip\"; txts[2] = \"012.DTI_64 b1000.301.DICOM\"; function draw() { canvas = document.getElementById(\"canvas\"); if (!canvas.getContext) { return; } ctx = canvas.getContext(\"2d\"); ctx.canvas.width = cw; ctx.canvas.height = ch; canvas.addEventListener(\"mousemove\", on_mousemove, false); canvas.addEventListener(\"click\", on_click, false); ctx.save(); for (var i=0;i<cw*ch/10000;++i) randomCircle(ctx,'#f7f3f7'); var start = 0; var end = 0; end = drawEllipse(ctx, 10, 10, w+6, h/2+6,'#ffffcc'); end = drawEllipse(ctx, 13, 13, w, h/2,'#ffffcc'); drawText(ctx, 33, 48,'#000000', 'output-DTIPreprocessing V1.0_NSG36'); drawText2(ctx, 13, 13,'#0099ff', 'Subject ID: 012'); drawText2(ctx, 13, 25,'#0099ff', 'Scan ID: 301'); drawText2(ctx, 13, 49,'#0099ff', 'Data Type: Recon DTIPreprocessing V1.0'); drawText2(ctx, 13, 61,'#0099ff', 'Data Format: ZIP'); drawText2(ctx, 13, 73,'#0099ff', 'Creation Date: 2013-12-12 20:00:21.0'); drawText3(ctx, 13, 13,'#0099ff', 'Data ID: 480'); start = rectangle(ctx, 13, 133, '#33ff00'); drawText(ctx, 33, 168,'#000000', 'DTIPreprocessing V1.0'); drawText3(ctx, -17, 133,'#0099ff', 'Version: null'); drawText2(ctx, 13, 133,'#0099ff', 'Submission Date: 2013-12-12 16:50:17.0'); drawText2(ctx, 13, 145,'#0099ff', 'Submitter: Ammar Benabdelkader'); drawText2(ctx, 13, 169,'#0099ff', 'Start Date: 2013-12-12 16:50:17.0'); drawText2(ctx, 13, 181,'#0099ff', 'End Date: 2013-12-12 20:00:21.0'); drawText2(ctx, 13, 193,'#0099ff', 'Description: DTI prep by ammar'); ctx.lineWidth = 1; ctx.fillStyle = ctx.strokeStyle = '#990000'; arrow(ctx,start,end,5); end = drawEllipse(ctx, 13, 253, w, h/2,'#ffffcc'); drawText(ctx, 33, 288,'#000000', '012.DTI_64 b1000.301.DICOM'); arrow2(ctx,end,5); drawText2(ctx, 13, 253,'#0099ff', 'Subject ID: 012'); drawText2(ctx, 13, 265,'#0099ff', 'Scan ID: 301'); drawText2(ctx, 13, 289,'#0099ff', 'Data Type: DTI_64 b1000'); drawText2(ctx, 13, 301,'#0099ff', 'Data Format: DICOM'); drawText2(ctx, 13, 313,'#0099ff', 'Creation Date: 2013-04-12 12:47:20.0'); drawText3(ctx, 13, 253,'#0099ff', 'Data ID: 413'); } function arrow(ctx,p1,p2,size){ ctx.beginPath(); ctx.fillStyle = '#990000' ctx.lineCap = 'round'; ctx.moveTo(p1.x+w/2, p1.y); ctx.lineTo(p1.x+w/2,p2.y+h/2); // 50 + 10 of the ellipse ctx.stroke(); ctx.moveTo(p1.x+w/2,p2.y+h/2); ctx.lineTo(p1.x+w/2-size, p2.y+h/2+size*2.5); ctx.lineTo(p1.x+w/2+size, p2.y+h/2+size*2.5); ctx.closePath(); ctx.fill(); } function arrow2(ctx,p1,size){ ctx.beginPath(); ctx.fillStyle = '#990000' ctx.lineCap = 'round'; ctx.moveTo(p1.x+w/2, p1.y-h/2); ctx.lineTo(p1.x+w/2, p1.y); ctx.stroke(); ctx.moveTo(p1.x+w/2, p1.y-h/2); ctx.lineTo(p1.x+w/2-size, p1.y-h/2+size*2.5); ctx.lineTo(p1.x+w/2+size, p1.y-h/2+size*2.5); ctx.closePath(); ctx.fill(); } function rectangle(ctx,x, y, color){ ctx.fillStyle = color; ctx.fillRect(x,y,w,h/2); ctx.strokeRect(x,y,w,h/2); ctx.fillStyle = '#FFFFFF'; ctx.font = \"24px Arial\"; return {x:x,y:y}; } function drawText(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"bold 12px Verdana\"; //ctx.strokeText(txt,x+20,y+5+h/4); ctx.fillText(txt,x,y); ctx.fillStyle = '#00000'; } function drawText2(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"13px Calibri\"; ctx.fillText('- ' + txt,x+w+5,y+10); } function drawText3(ctx,x, y, color, txt){ ctx.fillStyle = color; ctx.font = \"13px Calibri\"; ctx.fillText('- ' + txt,x+50,y+h/2-8); } function circle(ctx,x,y, color){ ctx.beginPath(); ctx.arc(x, y, 50, 0, 20, false); ctx.fillStyle = color; ctx.fill(); ctx.stroke(); return {x:x,y:y}; } function circle(ctx,x,y, color){ ctx.save(); //ctx.translate(canvas.width/2, ctx.height/2); //ctx.scale(2, 1); ctx.beginPath(); ctx.arc(x+w/2, y, 50, 0, Math.PI * 2, false); ctx.fillStyle = color; ctx.fill(); ctx.stroke(); return {x:x,y:y}; } function randomCircle(ctx,color){ ctx.save(); ctx.beginPath(); ctx.arc( Math.round(Math.random()*(ctx.canvas.width - 100) + 50), Math.round(Math.random()*(ctx.canvas.height - 100) + 50), Math.random()*20 + 10, 0, Math.PI * 2, false ); ctx.fillStyle = color; ctx.fill(); ctx.restore(); } function drawEllipse(ctx, x, y, w, h, color) { var kappa = .5522848, ox = (w / 2) * kappa, oy = (h / 2) * kappa, xe = x + w, ye = y + h, xm = x + w / 2, ym = y + h / 2; ctx.beginPath(); ctx.moveTo(x, ym); ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y); ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym); ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye); ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym); ctx.fillStyle = color; ctx.fill(); ctx.closePath(); ctx.stroke(); return {x:x,y:y}; } function on_click(e) { if (idx>=0) { window.location = links[idx]; } } function on_mousemove (ev) { var x, y; // Get the mouse position relative to the canvas element. if (ev.layerX || ev.layerX == 0) { // Firefox x = ev.layerX; y = ev.layerY; } else if (ev.offsetX || ev.offsetX == 0) { // Opera x = ev.offsetX; y = ev.offsetY; } //--------------------- // draw the coords: //--------------------- ctx.font = \"12px sans-serif\"; ctx.fillStyle = \"rgba(0, 128, 0, 1.0)\"; var str = x.toString() + \",\" + y.toString(); ctx.clearRect (0, 0, 60, 15); ctx.fillText(str, 0, 10); //------------------------------------ //</ncirclese point is in a circle: //------------------------------------ for(i=0; i<nlinks; i++) { var tw = 200; //ctx.measureText(linkText).width; var th = 10; //ctx.measureText(linkText).height; if ( (x>=(xs[i]) && x<=(xs[i]+tw)) && (y>=(ys[i]-th) && y<=(ys[i])) ) { if (!ins[i]) { document.body.style.cursor = \"pointer\"; //ctx.beginPath(); //ctx.strokeText(txts[i],xs[i],ys[i]); //ctx.stroke(); ins[i] = true; idx = i; } } else { if (ins[i]) { //ctx.beginPath(); //ctx.fillText(txts[i],xs[i],ys[i]); //ctx.stroke(); ins[i] = false; document.body.style.cursor = \"\"; } } } } --> </script> </head><body onload=\"javascript:draw();\"><div id=\"wrap\"></div><canvas id=\"canvas\" width=\"1\" height=\"1\"></canvas></body></html>";
-//    private static final String textInHtml = "<html> <body> <h1> Data History </h1> </body></html>";
     
     public static final String REFRESH = "Refresh";
     public static final String RESUME_ALL = "Resume All";
@@ -84,8 +78,6 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
     private DisplayProcessingStatus processingStatus;
 
     private final ProcessingStatusForm processingStatusForm = this;
-
-    private ListSelect inputData = new ListSelect();
 
     private Button refreshButton = new NativeButton();
     private NativeButton cancelButton; // = new NativeButton();  // cancel the whole processing
@@ -162,9 +154,6 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             return;
         }
 
-//		restartButton.setVisible(false);
-//		cancelButton.setVisible(false);
-
         setDataSource(processingStatus);
         setData(processingStatus);
         logger.info("Continuing being attached to. Displaying " + processingStatus.getStatus() + " for " + processing.getDescription() + " with status " + processing.getStatus());
@@ -173,7 +162,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
         addLabelField("processing.description", "Description");
         addLabelField("processing.date", "Creation date");
-        final String processingUpdateDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(processing.getLastUpdate()); // when the status is last updated
+        final String processingUpdateDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(userDataService.getLastestUpdate(processing)); // when the status is last updated
 
         //dataelements
         if (processingStatus.getSubmissionIOs().size() != 0) {
@@ -272,7 +261,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         statusLayout.setWidth("100%");
         final Submission submission = submissionIOinputs.get(0).getSubmission();    // There is at least one input!
         //get status information
-        String submissionStatus = submission.getStatus();
+        String submissionStatus = submission.getLastStatus().getValue();
         logger.info("Status is " + submissionStatus);
         Date lastUpdateDate = processing.getDate();
         final Iterator<Status> iterator = submission.getStatuses().iterator();
@@ -285,10 +274,17 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         }
         String submissionUpdateDate = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(lastUpdateDate); // when the status is last updated
         
-        Error error = processingService.getSubmissionError(submissionIOinputs.get(0).getSubmission().getDbId());
+        nl.amc.biolab.datamodel.objects.Error error = null;
+        List<nl.amc.biolab.datamodel.objects.Error> errors = submissionIOinputs.get(0).getSubmission().getErrors();
+        		
+        if (submissionIOinputs.get(0).getSubmission().getErrors() != null && submissionIOinputs.get(0).getSubmission().getErrors().size() > 0) {
+        	error = errors.get(errors.size() - 1);
+        }
+        
         if (error != null) {
             logger.info("Error message is " + error.getMessage());
         }
+        
         statusValue.append(getStatus(submissionStatus, error, app.isAdminURL() && userDataService.isNSGAdmin())).append("\n");
         logger.info(statusValue);
         createSubmissionButtons(app, submissionIOinputs.get(0), error);
@@ -306,10 +302,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             hl.addComponent(resubmitButton);
             hl.addComponent(markFailButton);
             statusLayout.addComponent(hl);
-//					} else if(submissionStatus.equals(ProcessingStatus.STAT_INIT)) {
             // TODO: The processing manager does not work properly if it has not started yet.
-//						layout.addComponent(status);
-//						layout.addComponent(markFailButton);
         } else if (ProcessingStatus.Aborted.equalsString(submissionStatus)) {
             statusLayout.addComponent(status);
             statusLayout.addComponent(remarksButton);
@@ -319,8 +312,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         return statusLayout;
     }
 
-    private void createSubmissionButtons(final VaadinTestApplication app, final SubmissionIO submissionIO, final Error error) {
-//		if(((VaadinTestApplication) getApplication()).isAdminURL() && userDataService.isNSGAdmin()) {
+    private void createSubmissionButtons(final VaadinTestApplication app, final SubmissionIO submissionIO, final nl.amc.biolab.datamodel.objects.Error error) {
         final Link statusLink = new Link("download", new StreamResource(new StreamSource() {
             public InputStream getStream() {
                 String status;
@@ -364,13 +356,9 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             @Override
             public void buttonClick(ClickEvent event) {
                 long dbId = processingStatus.getProcessing().getDbId();
-//                long userID = processingStatus.getProcessing().getUsers().iterator().next().getDbId();
-                long liferayID = app.getLiferayId(processingStatus.getProcessing().getUsers().iterator().next().getLiferayID());
+                long liferayID = app.getLiferayId(processingStatus.getProcessing().getUser().getLiferayID());
                 processingService.resubmit(dbId, submissionIO.getSubmission().getDbId(), userDataService.getUserId(), liferayID);
-                processingStatusForm.attach();
-//                processingStatus = processingService.getProcessingStatus(userDataService.getProcessing(dbId), userID, liferayID, false); // TODO: why is it false here?!
-//                refreshButton.setData(processingStatus);
-//                processingStatusForm.fireValueChange(false);//fireEvent(new Event(refreshButton));                                        
+                processingStatusForm.attach();                                        
             }
         });
 
@@ -400,8 +388,8 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                         okButton.addListener(new Button.ClickListener() {
                             public void buttonClick(ClickEvent event) {
                                 long dbId = processingStatus.getProcessing().getDbId();
-                                long userID = processingStatus.getProcessing().getUsers().iterator().next().getDbId();
-                                long liferayID = app.getLiferayId(processingStatus.getProcessing().getUsers().iterator().next().getLiferayID());
+                                long userID = processingStatus.getProcessing().getUser().getDbId();
+                                long liferayID = app.getLiferayId(processingStatus.getProcessing().getUser().getLiferayID());
                                 processingService.markFailed(submissionIO.getSubmission().getDbId(), (String) text.getValue());
                                 processingStatus = processingService.getProcessingStatus(userDataService.getProcessing(dbId), userID, liferayID, false);
                                 refreshButton.setData(processingStatus);
@@ -435,7 +423,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         });
     }
 
-    private String getStatus(String status, Error error, boolean testAdmin) {
+    private String getStatus(String status, nl.amc.biolab.datamodel.objects.Error error, boolean testAdmin) {
         logger.info("1- " + status);
         if (testAdmin && !ProcessingStatus.Done.equalsString(status)) {
             status = (error != null && error.getMessage() != null) ? error.getMessage() : status;

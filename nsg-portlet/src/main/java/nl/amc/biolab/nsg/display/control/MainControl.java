@@ -18,15 +18,14 @@
  */
 package nl.amc.biolab.nsg.display.control;
 
+import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.component.LoginUI;
 import nl.amc.biolab.nsg.display.component.MainUI;
-import nl.amc.biolab.nsgdm.User;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component.Event;
 import com.vaadin.ui.Component.Listener;
@@ -42,7 +41,7 @@ import com.vaadin.ui.Window;
 public class MainControl {
 
     Logger logger = LoggerFactory.getLogger(MainControl.class);
-    private static final long serialVersionUID = -8971079822824542521L;
+//    private static final long serialVersionUID = -8971079822824542521L;
 
     private VaadinTestApplication app;
 

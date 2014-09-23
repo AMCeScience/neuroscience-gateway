@@ -21,10 +21,10 @@ package nl.amc.biolab.nsg.display.service;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Project;
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Project;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
