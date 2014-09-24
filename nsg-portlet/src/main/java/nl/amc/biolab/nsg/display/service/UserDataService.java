@@ -481,7 +481,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("?format=zip"));
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat_tunnel_path"), config.read.getStringItem("xnat_absolute_path"));
+            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -506,7 +506,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+11);
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat_tunnel_path"), config.read.getStringItem("xnat_absolute_path"));
+            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -531,7 +531,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+10);
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat_tunnel_path"), config.read.getStringItem("xnat_absolute_path"));
+            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
