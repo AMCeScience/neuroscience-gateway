@@ -21,7 +21,7 @@
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>config-manager</artifactId>
-						<version>1.0.5-SNAPSHOT</version>
+						<version>1.0.6-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
@@ -33,11 +33,11 @@
 						<artifactId>xnat-sync</artifactId>
 						<version>0.0.2-SNAPSHOT</version>
 				</dependency>
-				<dependency>
+				<!--dependency>
 						<groupId>nl.amc.biolab.pgportal</groupId>
 						<artifactId>processingmanager</artifactId>
 						<version>2.1.10-SNAPSHOT</version>
-				</dependency>
+				</dependency-->
 				<dependency>
 						<groupId>com.liferay.portal</groupId>
 						<artifactId>portal-service</artifactId>

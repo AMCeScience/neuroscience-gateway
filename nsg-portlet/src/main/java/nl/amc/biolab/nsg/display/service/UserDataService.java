@@ -91,7 +91,7 @@ public class UserDataService {
     public UserDataService(String liferayScreenName, Long liferayId, boolean xnatLogin) {
         this();
         
-        XNATplugin xnat = new XNATplugin();
+//        XNATplugin xnat = new XNATplugin();
 
         if (liferayScreenName == null) {
             userId = 0L;
@@ -104,15 +104,10 @@ public class UserDataService {
         User user = null;
         openSession();
 
-        logger.debug("Checking if we should login to XNAT");
-        if (xnatLogin && xnat.isDataSourceAlive(1L)) {
-            xnatLogin();
-            user = getXnatUser();
-        }
-
-        if (user == null) {
-            userId = 0L;
-        }
+//        logger.debug("Checking if we should login to XNAT");
+//        if (xnatLogin && xnat.isDataSourceAlive(1L)) {
+//            user = xnatLogin();
+//        }
 
         logger.debug("Finalizing the creation of the user data service object.");
         try {
@@ -120,6 +115,7 @@ public class UserDataService {
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
+        
         userId = (user == null) ? 0L : user.getDbId();
     }
 
@@ -415,28 +411,14 @@ public class UserDataService {
      *
      * @throws SynchXNAT checkUser RuntimeException
      */
-    public void xnatLogin() {
+    public User xnatLogin() {
     	XNATplugin xnat = new XNATplugin();
     	
-        xnat.checkUser(liferayId.toString());
+        return xnat.checkUser(liferayId.toString());
     }
     
     public boolean checkAuthentication(User user) {
         return persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), XNAT_DATASOURCE_ID).getAuthentication() != null;
-    }
-
-    /**
-     * @return user or null if not found
-     */
-    public User getXnatUser() {
-        if (liferayId == null) {
-            return null;
-        }
-        try {
-            return persistenceManager.get.user(liferayId.toString());
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     /**
@@ -544,7 +526,9 @@ public class UserDataService {
 		for (Submission submission : processing.getSubmissions()) {
 			Date this_update = submission.getLastStatus().getTimestamp();
 			
-			if (this_update.after(update)) {
+			if (update == null) {
+				update = this_update;
+			} else if (this_update.after(update)) {
 				update = this_update;
 			}
 		}
@@ -725,12 +709,16 @@ public class UserDataService {
     
     @SuppressWarnings("unchecked")
     private Date getTime(Long sId, String status) {
-
        Collection<Status> statuses = persistenceManager.query.executeQuery("from Status where Value ='" + status + "' and SubmissionID='" + sId + "'");
-       if (statuses!=null && statuses.size()<1)
+       
+       if (statuses == null || statuses.size() < 1) {
     	   return null;
-       for (Status sts : statuses) {
-       		return sts.getTimestamp();
+       }
+       
+       Status this_status = statuses.iterator().next();
+       
+       if (this_status != null) {
+    	   return this_status.getTimestamp();
        }
     	   
       return null;

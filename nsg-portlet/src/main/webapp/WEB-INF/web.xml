@@ -1,10 +1,8 @@
-<?xml version="1.0"?>
-
-<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+<?xml version="1.0" encoding="UTF-8"?><web-app xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.4" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <display-name>NSG</display-name>
-    <listener>
+    <!--listener>
         <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>
-    </listener>
+    </listener-->
     <servlet>
         <servlet-name>InitServices</servlet-name>
         <servlet-class>hu.sztaki.lpds.information.local.InitAxisServices</servlet-class>
@@ -35,14 +33,12 @@
     </servlet>
     <servlet>
         <servlet-name>CredentialProvider</servlet-name>
-        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet
-        </servlet-class>
+        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet>
         <servlet-name>ProcessingManagerService</servlet-name>
-        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet
-        </servlet-class>
+        <servlet-class>com.sun.xml.ws.transport.http.servlet.WSServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
@@ -90,9 +86,6 @@
         <servlet-name>tce</servlet-name>
         <url-pattern>/tce</url-pattern>
     </servlet-mapping>
-    <listener>
-	    <listener-class>nl.amc.biolab.tools.HibernateListener</listener-class>
-	</listener>
     <servlet>
         <servlet-name>AxisServlet</servlet-name>
         <!--display-name>Apache-Axis Servlet</display-name-->
@@ -152,4 +145,8 @@
     	<param-name>productionMode</param-name>
     	<param-value>false</param-value>
     </context-param>
+    
+    <listener>
+	    <listener-class>nl.amc.biolab.tools.HibernateListener</listener-class>
+	</listener>
 </web-app>

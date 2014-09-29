@@ -46,10 +46,8 @@ public class FieldService {
 		fieldHeader.put(Project.class.getName(), map);
 
 		map = new LinkedHashMap<String, String>() {{
-			put("subject", "subject");
 			put("date", "date");
 			put("type", "type");
-			put("scanID", "scan ID");
 			put("format", "format");
 			put("resource.name", "source");
 		}};

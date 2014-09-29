@@ -33,7 +33,6 @@ import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.datamodel.objects.Status;
 import nl.amc.biolab.datamodel.objects.Submission;
 import nl.amc.biolab.datamodel.objects.SubmissionIO;
-import nl.amc.biolab.nsg.ProcessingStatus;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
 import nl.amc.biolab.nsg.display.service.ProcessingService;
@@ -98,10 +97,10 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
     private static Map<String, String> colorMap = new LinkedHashMap<String, String>() {
         {
-            put(ProcessingStatus.On_Hold.toString(), "#AA0000");
-            put(ProcessingStatus.In_Progress.toString(), "#0000AA");
-            put(";", "#FF9900");
-            put(ProcessingStatus.Done.toString(), "#00AA00");
+//            put(ProcessingStatus.On_Hold.toString(), "#AA0000");
+//            put(ProcessingStatus.In_Progress.toString(), "#0000AA");
+//            put(";", "#FF9900");
+//            put(ProcessingStatus.Done.toString(), "#00AA00");
         }
     };
 
@@ -293,8 +292,11 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         status.setDescription("Last updated on " + submissionUpdateDate);
         status.setWidth("80%");
         
+        String on_hold = "On Hold"; //ProcessingStatus.On_Hold
+        String in_progress = "In Progress"; //ProcessingStatus.In_Progress
+        String aborted = "Aborted"; //ProcessingStatus.Aborted
         
-        if (app.isAdminURL() && userDataService.isNSGAdmin() && (ProcessingStatus.On_Hold.equalsString(submissionStatus) || ProcessingStatus.In_Progress.equalsString(submissionStatus))) {
+        if (app.isAdminURL() && userDataService.isNSGAdmin() && (on_hold.equals(submissionStatus) || in_progress.equals(submissionStatus))) {
             resubmitButton.setWidth("-1px");
             statusLayout.addComponent(status);
             HorizontalLayout hl = new HorizontalLayout();
@@ -303,7 +305,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             hl.addComponent(markFailButton);
             statusLayout.addComponent(hl);
             // TODO: The processing manager does not work properly if it has not started yet.
-        } else if (ProcessingStatus.Aborted.equalsString(submissionStatus)) {
+        } else if (aborted.equals(submissionStatus)) {
             statusLayout.addComponent(status);
             statusLayout.addComponent(remarksButton);
         } else {
@@ -425,7 +427,11 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
     private String getStatus(String status, nl.amc.biolab.datamodel.objects.Error error, boolean testAdmin) {
         logger.info("1- " + status);
-        if (testAdmin && !ProcessingStatus.Done.equalsString(status)) {
+        
+        String done = "Done"; // ProcessingStatus.Done
+        String on_hold = "On Hold"; // ProcessingStatus.On_Hold
+        
+        if (testAdmin && !done.equals(status)) {
             status = (error != null && error.getMessage() != null) ? error.getMessage() : status;
         }
         logger.info("2- " + status);
@@ -433,10 +439,10 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         String color = null;
         if (status.contains(";")) {
             color = colorMap.get(";");
-        } else if (ProcessingStatus.Done.equalsString(status)) {
-            color = colorMap.get(ProcessingStatus.Done.toString());
+        } else if (done.equals(status)) {
+            color = colorMap.get(done);
         } else if (status.matches(".*([Ff]ailed|[Ee]rror|ERROR).*")) {
-            color = colorMap.get(ProcessingStatus.On_Hold.toString());
+            color = colorMap.get(on_hold);
         } else {
             color = colorMap.get(status.replaceAll("[0-9][0-9]*\\s*", ""));
         }

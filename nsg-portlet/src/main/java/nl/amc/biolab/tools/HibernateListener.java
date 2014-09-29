@@ -9,7 +9,15 @@ public class HibernateListener implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
     	try {
+    		System.out.println("############################################# Starting session factory");
+    		
     		HibernateUtil.getSessionFactory();
+    		
+    		if (HibernateUtil.getSessionFactory().isClosed()) {
+    			System.out.println("############################################# Failed session factory");
+    		} else {
+    			System.out.println("############################################# Done with session factory");
+    		}
     	} catch(Exception e) {
     		System.out.println(e.getMessage());
     		
@@ -18,6 +26,8 @@ public class HibernateListener implements ServletContextListener {
     }
 
     public void contextDestroyed(ServletContextEvent event) {
+    	System.out.println("############################################# Destroying session factory");
+    	
     	HibernateUtil.getSessionFactory().close();
     }
 }

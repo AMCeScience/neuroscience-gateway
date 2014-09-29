@@ -21,7 +21,6 @@ package nl.amc.biolab.nsg.display.service;
 import java.util.ArrayList;
 
 import nl.amc.biolab.datamodel.objects.Processing;
-import nl.amc.biolab.nsg.ProcessingManager;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
 
 import org.apache.log4j.Level;
@@ -35,7 +34,7 @@ public class ProcessingService {
 	Logger logger = Logger.getLogger(ProcessingService.class);
 
 	protected UserDataService userDataService;
-	protected ProcessingManager processingManager = new ProcessingManager();
+//	protected ProcessingManager processingManager = new ProcessingManager();
 
 	public ProcessingService() {
 	}
@@ -189,7 +188,7 @@ public class ProcessingService {
 	}
 
 	public void shutdown() {
-		processingManager.shutdown();
+		// TODO processingManager.shutdown();
 	}
 	//
 	// private String getStatus(Processing processing) {

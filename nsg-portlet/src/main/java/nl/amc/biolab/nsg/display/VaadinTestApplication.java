@@ -133,7 +133,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
             return;
         }
 
-        if (userDataService == null || userDataService.getXnatUser() == null) {
+        if (userDataService == null || userDataService.xnatLogin() == null) {
         	ErrorMessages errors = new ErrorMessages();
         	
             try {
