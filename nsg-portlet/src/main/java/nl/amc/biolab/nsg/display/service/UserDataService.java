@@ -88,35 +88,26 @@ public class UserDataService {
      * @param xnatLogin true is login into xnat
      * @throws SynchXNAT RuntimeException
      */
-    public UserDataService(String liferayScreenName, Long liferayId, boolean xnatLogin) {
+    public UserDataService(String liferayScreenName, Long liferayId) {
         this();
-        
-//        XNATplugin xnat = new XNATplugin();
 
-        if (liferayScreenName == null) {
+        if (liferayScreenName == null || liferayId == null) {
             userId = 0L;
+            
             return;
         }
 
         this.liferayId = liferayId;
-
         this.liferayScreenName = liferayScreenName;
-        User user = null;
+        
         openSession();
 
-//        logger.debug("Checking if we should login to XNAT");
-//        if (xnatLogin && xnat.isDataSourceAlive(1L)) {
-//            user = xnatLogin();
-//        }
-
         logger.debug("Finalizing the creation of the user data service object.");
-        try {
-            user = persistenceManager.get.user(liferayId.toString());
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
         
-        userId = (user == null) ? 0L : user.getDbId();
+        User user = null;
+        user = persistenceManager.get.user(liferayId.toString());
+        
+        this.userId = (user == null) ? 0L : user.getDbId();
     }
 
     public String getLiferayScreenName() {
@@ -252,12 +243,16 @@ public class UserDataService {
      */
     public List<Application> getAllApplications() {
         List<Application> applications = null;
+        
         try {
             applications = persistenceManager.get.applications();
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
+        
         if (applications == null) {
+        	System.out.println("no applications found");
+        	
             applications = new ArrayList<Application>();
         }
 
@@ -537,7 +532,7 @@ public class UserDataService {
 	}
 
     public void openSession() {
-        logger.info("" + new Date() + " Opening a new session.");
+        logger.info("" + new Date() + " Opening a new session for user: " + liferayId.toString());
         
         persistenceManager.init(liferayId.toString());
         

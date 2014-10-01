@@ -76,20 +76,24 @@ public class ItemList<T> extends Table {
 
 		final BeanItemContainer<T> bic = new BeanItemContainer<T>(clazz);
 		Iterator<String> iter = fields.keySet().iterator();
+		
 		while(iter.hasNext()) {
 			String f = iter.next();
+			
 			if (!f.contains(".")) {
 				addContainerProperty(f, String.class, "");
 			} else {
 				bic.addNestedContainerProperty(f);
 
 			}
+			
 			setColumnHeader(f, fields.get(f));
-            // TODO: See if this gives all columns the same width!
             setColumnExpandRatio(f, 1);
 		}
         
         setItemDescriptionGenerator(new ItemDescriptionGenerator() {
+			private static final long serialVersionUID = -2062514408397714061L;
+
 			@Override
             public String generateDescription(Component source, Object itemId, Object propertyId) {
                 if (! (itemId instanceof Processing)){
@@ -137,7 +141,10 @@ public class ItemList<T> extends Table {
 		if(valueChangeListener != null) {
 			removeListener(valueChangeListener);
 		}
+		
 		valueChangeListener = new Property.ValueChangeListener() {
+			private static final long serialVersionUID = -6785076904973354745L;
+
 			@SuppressWarnings("unchecked")
 			@Override
 			public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
@@ -156,6 +163,7 @@ public class ItemList<T> extends Table {
 				}
 			}
 		};
+		
 		addListener(valueChangeListener);
 	}
 

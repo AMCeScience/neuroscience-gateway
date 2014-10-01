@@ -32,7 +32,6 @@ public class LabelField extends CustomField {
 		setCompositionRoot(layout);
 		label.setWidth("100%");
 		label.setHeight("100%");
-		label.setStyle("");
 		layout.addComponent(label);
 	}
 
@@ -68,7 +67,6 @@ public class LabelField extends CustomField {
 	 * @param value
 	 */
 	public void setLabelValue(String caption, String value) {
-		//TODO escape html in caption and value
 		setLabelValue("<span style='font-size: 12px;'><b>" + caption + ":</b>&nbsp;" + value + "</span>");
 	}
 }

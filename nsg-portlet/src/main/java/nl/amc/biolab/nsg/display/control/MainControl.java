@@ -39,9 +39,7 @@ import com.vaadin.ui.Window;
  *
  */
 public class MainControl {
-
     Logger logger = LoggerFactory.getLogger(MainControl.class);
-//    private static final long serialVersionUID = -8971079822824542521L;
 
     private VaadinTestApplication app;
 
@@ -92,7 +90,9 @@ public class MainControl {
                 layout.removeAllComponents();
                 LoginUI loginUI = new LoginUI(this);
                 loginUI.addListener(new Listener() {
-                    @Override
+					private static final long serialVersionUID = -8728443364176948015L;
+
+					@Override
                     public void componentEvent(Event event) { // login failed
                         mainControl.init((User) ((Button) event.getSource()).getData());
                     }

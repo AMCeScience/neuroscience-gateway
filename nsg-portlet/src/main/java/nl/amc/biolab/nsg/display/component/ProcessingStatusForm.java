@@ -24,7 +24,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,7 +46,6 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Embedded;
-import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Link;
 import com.vaadin.ui.NativeButton;
@@ -95,14 +93,14 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
     Table submissionTable = new Table();
 
-    private static Map<String, String> colorMap = new LinkedHashMap<String, String>() {
-        {
-//            put(ProcessingStatus.On_Hold.toString(), "#AA0000");
-//            put(ProcessingStatus.In_Progress.toString(), "#0000AA");
-//            put(";", "#FF9900");
-//            put(ProcessingStatus.Done.toString(), "#00AA00");
-        }
-    };
+//    private static Map<String, String> colorMap = new LinkedHashMap<String, String>() {
+//        {
+////            put(ProcessingStatus.On_Hold.toString(), "#AA0000");
+////            put(ProcessingStatus.In_Progress.toString(), "#0000AA");
+////            put(";", "#FF9900");
+////            put(ProcessingStatus.Done.toString(), "#00AA00");
+//        }
+//    };
 
     public ProcessingStatusForm() {
         super();
@@ -121,12 +119,16 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
     private void showHTML(final String htmlContent, final Application app) throws IllegalArgumentException, NullPointerException {
         app.getMainWindow().addWindow(new Window() {
-            {
+			private static final long serialVersionUID = -2307854110750435145L;
+
+			{
                 center();
                 setWidth("75%");
                 setHeight("600px");
                 StreamResource.StreamSource source = new StreamResource.StreamSource() {
-                    public InputStream getStream() {
+					private static final long serialVersionUID = -3745013501121916404L;
+
+					public InputStream getStream() {
                         return new ByteArrayInputStream(htmlContent.getBytes());
                     }
                 };
@@ -172,7 +174,6 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             submissionTable = new Table();
             submissionTable.setWidth("100%");
             submissionTable.setHeight("300px");
-//            submissionTable.setCaption("data");
             submissionTable.setSelectable(true);
             submissionTable.setMultiSelect(true);
             submissionTable.setImmediate(true);
@@ -185,48 +186,59 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             submissionTable.setColumnExpandRatio("view history", 20f);
             submissionTable.setColumnExpandRatio("status", 30f);
 
-            for (Map<List<SubmissionIO>, List<SubmissionIO>> map : processingStatus.getSubmissionIOs()) { // submissions
-                for (List<SubmissionIO> submissionIOinputs : map.keySet()) { // for each submission, there is ONE map actually
+            for (Map<List<SubmissionIO>, List<SubmissionIO>> map : processingStatus.getSubmissionIOs()) {
+                for (List<SubmissionIO> submissionIOinputs : map.keySet()) {
                     if (submissionIOinputs.isEmpty()) {
-                        logger.error("Skipping a submission with no inputs in processing: "+processingStatus.getProcessing().getDbId());
+                        logger.error("Skipping a submission with no inputs in processing: " + processingStatus.getProcessing().getDbId());
+                        
                         continue;
                     }
                     
                     //inputs
                     StringBuffer inputValue = new StringBuffer();
+                    
                     for (SubmissionIO submissionIOinput : submissionIOinputs) {
                         DataElement inputElement = submissionIOinput.getDataElement();
+                        
                         inputValue.append("<a href='" + userDataService.getDownloadURI(inputElement.getDbId()) + "' target='_blank'>" + inputElement.getName() + "</a><br />");
                     }
+                    
                     Label input = new Label(inputValue.toString(), Label.CONTENT_XHTML);
                     input.setWidth("-1px");
-
+                    
                     //outputs
-                    StringBuffer downloadValue = new StringBuffer();
-//                    StringBuffer viewValue = new StringBuffer();
                     VerticalLayout historyLayout = new VerticalLayout();
-                    Label download = null;
                     historyLayout.setWidth("100%");
+                    
+                    StringBuffer downloadValue = new StringBuffer();
+                    Label download = null;
+                    
                     final List<SubmissionIO> outputs = map.get(submissionIOinputs);
+                    
                     if (outputs.isEmpty()) {
                         download = new Label("No output available", Label.CONTENT_XHTML);
                     } else {
                         for (SubmissionIO submissionIOoutput : outputs) {
                             final DataElement outputElement = submissionIOoutput.getDataElement();
+                            
                             downloadValue.append("<a href='").append(userDataService.getDownloadURI(outputElement.getDbId())).append("' target='_blank'>download output</a><br />");
-//                            viewValue.append("<a href='").append(userDataService.getViewURI(outputElement.getDbId())).append("' target='_blank'>view output</a><br />");
 
                             NativeButton viewHistoryButton = new NativeButton("history");
+                            
                             viewHistoryButton.addListener(new Button.ClickListener() {
-                                @Override
+								private static final long serialVersionUID = 4280267926508263057L;
+
+								@Override
                                 public void buttonClick(ClickEvent event) {
                                     final String htmlContent = userDataService.getDataHistory(outputElement.getDbId());
                                     showHTML(htmlContent, app);
                                 }
                             });
+                            
                             historyLayout.addComponent(viewHistoryButton);
                         }
-                        download = new Label(downloadValue.toString()/*+viewValue.toString()*/, Label.CONTENT_XHTML);
+                        
+                        download = new Label(downloadValue.toString(), Label.CONTENT_XHTML);
                         download.setWidth("-1px");
                     }
                     
@@ -237,19 +249,24 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                     submissionTable.addItem(new Object[]{input, download, historyLayout, statusLayout}, null);
                 }
             }
+            
             getLayout().addComponent(submissionTable);
         }
 
         //total status
         Label space = new Label("<div>&nbsp;</div>", Label.CONTENT_XHTML);
+        
         space.setWidth("100%");
         space.setHeight("10px");
+        
         getLayout().addComponent(space);
 
         LabelField f = new LabelField();
         LabelField lastUpdateDateFieled = new LabelField();
+        
         lastUpdateDateFieled.setLabelValue("<span style='font-size: 12px'><b>Last updated on:</b>&nbsp;</span>", processingUpdateDate);
         f.setLabelValue("<span style='font-size: 12px'><b>Overall status:</b>&nbsp;</span>", getStatus(processingStatus.getStatus(), null, false));
+        
         getLayout().addComponent(f);
         getLayout().addComponent(lastUpdateDateFieled);
     }
@@ -284,39 +301,33 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             logger.info("Error message is " + error.getMessage());
         }
         
-        statusValue.append(getStatus(submissionStatus, error, app.isAdminURL() && userDataService.isNSGAdmin())).append("\n");
+        statusValue.append(getStatus(submissionStatus, error, /*app.isAdminURL() &&*/ userDataService.isNSGAdmin())).append("\n");
+        
         logger.info(statusValue);
+        
         createSubmissionButtons(app, submissionIOinputs.get(0), error);
         
         Label status = new Label(statusValue.toString(), Label.CONTENT_XHTML);
         status.setDescription("Last updated on " + submissionUpdateDate);
         status.setWidth("80%");
         
-        String on_hold = "On Hold"; //ProcessingStatus.On_Hold
-        String in_progress = "In Progress"; //ProcessingStatus.In_Progress
-        String aborted = "Aborted"; //ProcessingStatus.Aborted
+        String aborted = "Aborted";
         
-        if (app.isAdminURL() && userDataService.isNSGAdmin() && (on_hold.equals(submissionStatus) || in_progress.equals(submissionStatus))) {
-            resubmitButton.setWidth("-1px");
-            statusLayout.addComponent(status);
-            HorizontalLayout hl = new HorizontalLayout();
-            hl.addComponent(viewStatusButton);
-            hl.addComponent(resubmitButton);
-            hl.addComponent(markFailButton);
-            statusLayout.addComponent(hl);
-            // TODO: The processing manager does not work properly if it has not started yet.
-        } else if (aborted.equals(submissionStatus)) {
+        if (aborted.equals(submissionStatus)) {
             statusLayout.addComponent(status);
             statusLayout.addComponent(remarksButton);
         } else {
             statusLayout.addComponent(status);
         }
+        
         return statusLayout;
     }
 
     private void createSubmissionButtons(final VaadinTestApplication app, final SubmissionIO submissionIO, final nl.amc.biolab.datamodel.objects.Error error) {
         final Link statusLink = new Link("download", new StreamResource(new StreamSource() {
-            public InputStream getStream() {
+			private static final long serialVersionUID = 2010850543250392280L;
+
+			public InputStream getStream() {
                 String status;
                 if (error != null) {
                     status = error.getCode() + "\n" + error.getMessage() + "\n" + error.getDescription();
@@ -329,10 +340,14 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
         viewStatusButton = new NativeButton("Details");
         viewStatusButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -8337533736203519683L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 app.getMainWindow().addWindow(new Window() {
-                    {
+					private static final long serialVersionUID = 1520192489661790818L;
+
+					{
                         center();
                         setWidth("700px");
                         setHeight("500px");
@@ -355,7 +370,9 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         resubmitButton = new NativeButton("Resume");
         resubmitButton.setData(processingStatusForm);
         resubmitButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -6410875548044234734L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 long dbId = processingStatus.getProcessing().getDbId();
                 long liferayID = app.getLiferayId(processingStatus.getProcessing().getUser().getLiferayID());
@@ -367,10 +384,14 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         markFailButton = new NativeButton("Abort");
         markFailButton.setData(processingStatusForm);
         markFailButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -5019762936706219454L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 app.getMainWindow().addWindow(new Window() {
-                    {
+					private static final long serialVersionUID = 3852384470521127702L;
+
+					{
                         final Window window = this;
                         center();
                         setWidth("500px");
@@ -388,7 +409,9 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                         okButton.setWidth("-1px");
                         okButton.setHeight("-1px");
                         okButton.addListener(new Button.ClickListener() {
-                            public void buttonClick(ClickEvent event) {
+							private static final long serialVersionUID = 1754437322024958253L;
+
+							public void buttonClick(ClickEvent event) {
                                 long dbId = processingStatus.getProcessing().getDbId();
                                 long userID = processingStatus.getProcessing().getUser().getDbId();
                                 long liferayID = app.getLiferayId(processingStatus.getProcessing().getUser().getLiferayID());
@@ -409,10 +432,14 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
         remarksButton = new NativeButton("Why?");
         remarksButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -267778012100029422L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 app.getMainWindow().addWindow(new Window() {
-                    {
+					private static final long serialVersionUID = -5026454769214596711L;
+
+					{
                         center();
                         setWidth("700px");
                         setHeight("500px");
@@ -429,27 +456,15 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         logger.info("1- " + status);
         
         String done = "Done"; // ProcessingStatus.Done
-        String on_hold = "On Hold"; // ProcessingStatus.On_Hold
+//        String on_hold = "On Hold"; // ProcessingStatus.On_Hold
         
         if (testAdmin && !done.equals(status)) {
             status = (error != null && error.getMessage() != null) ? error.getMessage() : status;
         }
+        
         logger.info("2- " + status);
-
-        String color = null;
-        if (status.contains(";")) {
-            color = colorMap.get(";");
-        } else if (done.equals(status)) {
-            color = colorMap.get(done);
-        } else if (status.matches(".*([Ff]ailed|[Ee]rror|ERROR).*")) {
-            color = colorMap.get(on_hold);
-        } else {
-            color = colorMap.get(status.replaceAll("[0-9][0-9]*\\s*", ""));
-        }
-        if (color == null) {
-            color = "#000000";
-        }
-        return "<span style='color: " + color + "'>" + (status != null ? status : "Unavailable") + "</span>";
+        
+        return "<span>" + (status != null ? status : "Unavailable") + "</span>";
     }
 
     @Override
@@ -462,37 +477,40 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         refreshButton.setDescription("Refresh the status of this processing");
         refreshButton.setData(processingStatus);
         refreshButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -4193539828744300010L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 refreshButton.setData(processingStatus);
                 userDataService.reopenSession();
-                processingStatusForm.fireValueChange(false);//fireEvent(new Event(refreshButton));
+                processingStatusForm.fireValueChange(false);
             }
         });
         
         resumeAllButton = new NativeButton();
         resumeAllButton.setCaption(RESUME_ALL);
         resumeAllButton.setDescription("Resume all submissions that are on hold.");
-//        resumeAllButton.setData(processingStatus);
         resumeAllButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -8752115869501927142L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 processingService.resubmit(processingStatus.getProcessing().getDbId());
                 processingStatusForm.attach();
             }
         });        
 
-//		this.refreshButton = refreshButton;
-
         cancelButton = new NativeButton();
         cancelButton.setCaption(CANCEL);
         cancelButton.setDescription("Cancel this processing");
         cancelButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -1060436804385447671L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 logger.debug("Cancel button is clicked.");
                 processingService.markFailed(processingStatus.getProcessing().getDbId());
-                processingStatusForm.fireValueChange(false);//fireEvent(new Event(refreshButton));
+                processingStatusForm.fireValueChange(false);
             }
         });
 
@@ -500,7 +518,9 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         deleteFilesButton.setCaption(DELETE_FILES);
         deleteFilesButton.setDescription("Delete the copies of input and output files related to this processing from the grid");
         deleteFilesButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -2563970523271864224L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 logger.debug("Delete Files button is clicked.");
                 getApplication().getMainWindow().showNotification("Not implemented yet.");
@@ -511,7 +531,9 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         reportButton.setCaption(REPORT);
         reportButton.setDescription("Get a summary of what happened to this processing");
         reportButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = -216255929194718747L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 logger.debug("Report button is clicked.");
                 final String htmlContent = userDataService.getProcessingReport(processingStatus.getProcessing().getDbId());
@@ -523,11 +545,13 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
         restartButton.setCaption(RESTART);
         restartButton.setDescription("Start a new processing to run the same application on the same data");
         restartButton.addListener(new Button.ClickListener() {
-            @Override
+			private static final long serialVersionUID = 1474073840913621689L;
+
+			@Override
             public void buttonClick(ClickEvent event) {
                 logger.debug("Restart button is clicked.");
                 processingService.restart(processingStatus.getProcessing().getDbId());
-                processingStatusForm.fireValueChange(false);//fireEvent(new Event(refreshButton));
+                processingStatusForm.fireValueChange(false);
             }
         });
 
@@ -535,25 +559,13 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             System.out.println("app is null");
         } else if (app.getUserDataService() == null) {
             System.out.println("app user data service is null");
-        } else if (app.isAdminURL() && app.getUserDataService().isNSGAdmin()) {
-            refreshButton.setVisible(true);
-            resumeAllButton.setVisible(true);
         } else {
             refreshButton.setVisible(false);
             resumeAllButton.setVisible(false);
         }
         
-//                Label space = new Label("<div>&nbsp;</div>", Label.CONTENT_XHTML);
-//                space.setWidth("100%");
-//                space.setHeight("10px");
         buttons.add(refreshButton);
         buttons.add(resumeAllButton);
-//        buttons.add(new Label("<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>", Label.CONTENT_XHTML));
-//        buttons.add(cancelButton);
-//                buttons.add(restartButton);
-//                buttons.add(deleteFilesButton);
-//                buttons.add(new Label("<div>&nbsp;&nbsp;&nbsp;&nbsp;</div>", Label.CONTENT_XHTML));
-//                buttons.add(reportButton);
 
         return buttons;
     }
