@@ -23,8 +23,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
+import nl.amc.biolab.config.exceptions.ReaderException;
+import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.objects.Application;
 import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.Processing;
@@ -36,7 +39,16 @@ import nl.amc.biolab.nsg.display.service.FieldService;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.LoggingFilter;
+import com.sun.jersey.api.json.JSONConfiguration;
 import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -59,6 +71,7 @@ import com.vaadin.ui.Select;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.Window.Notification;
 
 /**
  *
@@ -454,57 +467,82 @@ public class MainUI extends CustomComponent {
 		pf.addListener(new Listener() {
 			private static final long serialVersionUID = -2040377891185846134L;
 
+			@SuppressWarnings("unchecked")
 			@Override
 			public void componentEvent(Event event) {
 				if (((Button) event.getSource()).getCaption().equals(ProcessingForm.SUBMIT)) {
-					// TODO removed for demo
-					/*
-					 * Processing processing = (Processing) ((Button)
-					 * event.getSource()).getData();
-					 * 
-					 * // input List<List<Long>> submits = new
-					 * ArrayList<List<Long>>(); try { // workaround for missing
-					 * elements in pf.getDataElements() for (Long dbId :
-					 * ((VaadinTestApplication)
-					 * getApplication()).getUserDataService
-					 * ().getDataElementDbIds()) { ArrayList<Long> filesPerPort
-					 * = new ArrayList<Long>(); filesPerPort.add(dbId);
-					 * submits.add(filesPerPort); }
-					 * 
-					 * } catch (Exception e) { e.printStackTrace(); }
-					 * 
-					 * // submit String messsage =
-					 * app.getUserDataService().checkApplicationInput
-					 * (processing.getApplication().getDbId(), submits); if
-					 * (messsage != null) {
-					 * app.getMainWindow().showNotification(
-					 * messsage.replaceAll("\n", "<br />"),
-					 * Notification.TYPE_ERROR_MESSAGE); } else { //TODO
-					 * currently submit blocks for some time:
-					 * setProcessingStatusEditor please wait for start and
-					 * refresh later Long processingDbId =
-					 * app.getProcessingService
-					 * ().submit(app.getUserDataService().getProjectDbId(),
-					 * processing.getApplication().getDbId(),
-					 * processing.getApplication().getType(), (ArrayList)
-					 * submits, app.getUserDataService().getUserId(),
-					 * app.getUserDataService().getLiferayId(),
-					 * processing.getName());
-					 * logger.info("submit result processingDbId " +
-					 * ((processingDbId != null) ? processingDbId : "null"));
-					 * app
-					 * .getUserDataService().setProcessingDbId(processingDbId);
-					 * 
-					 * if (processingDbId != null) { processing =
-					 * app.getUserDataService().getProcessing(processingDbId);
-					 * app.getMainWindow().open(new
-					 * ExternalResource("processing")); } else {
-					 * app.getMainWindow
-					 * ().showNotification("Failed to submit processing"); } }
-					 */
+					Processing processing = (Processing) ((Button) event.getSource()).getData();
+					
+					// Send to processing manager
+					JSONObject submission = new JSONObject();
+					JSONArray submits = new JSONArray();
+
+					try {
+						for (Long dbId : ((VaadinTestApplication) getApplication()).getUserDataService().getDataElementDbIds()) {
+							ArrayList<Long> filesPerPort = new ArrayList<Long>();
+							filesPerPort.add(dbId);
+
+							submits.add(filesPerPort);
+						}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+
+					submission.put("applicationId", processing.getApplication().getDbId());
+					submission.put("description", processing.getDescription());
+					submission.put("userId", app.getUserDataService().getUserId());
+					submission.put("projectId", processing.getProject().getDbId());
+					submission.put("submission", submits);
+
+					String message = app.getUserDataService().checkApplicationInput(processing.getApplication(), submits);
+
+					if (message != null) {
+						app.getMainWindow().showNotification(message.replaceAll("\n", "<br />"), Notification.TYPE_ERROR_MESSAGE);
+					} else {
+						try {
+							ConfigurationManager config = new ConfigurationManager();
+						
+							ClientConfig clientConfig = new DefaultClientConfig();
+							clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+							Client client = Client.create(clientConfig);
+	
+							// Logging
+							client.addFilter(new LoggingFilter(System.out));
+	
+							WebResource webResource = client.resource(config.read.getStringItem("nsg", "processing_url"));
+	
+							ClientResponse response = webResource.accept("application/json").type("application/json").post(ClientResponse.class, submission);
+							
+							int response_code = response.getStatus();
+							Long processingDbId = null;
+							
+							if (response_code == 200) {
+								for (Entry<String, List<String>> entry : response.getHeaders().entrySet()) {
+									if (entry.getKey().equals("processingId")) {
+										processingDbId = Long.getLong(entry.getValue().get(0));
+									}
+								}
+		
+								app.getUserDataService().setProcessingDbId(processingDbId);
+							} else {
+								logger.debug("Error in REST #########################################");
+							}
+	
+							if (processingDbId != null) {
+								processing = app.getUserDataService().getProcessing(processingDbId);
+								
+								app.getMainWindow().open(new ExternalResource("processing"));
+							} else {
+								app.getMainWindow().showNotification("Failed to submit processing");
+							}
+						} catch (ReaderException e) {
+							app.getMainWindow().showNotification("Failed to submit processing (configuration file error)");
+						}
+					}
 				}
 			}
 		});
+
 		setEditor(pf);
 	}
 

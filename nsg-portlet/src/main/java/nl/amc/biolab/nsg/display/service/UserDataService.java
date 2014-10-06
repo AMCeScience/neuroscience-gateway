@@ -530,6 +530,44 @@ public class UserDataService {
 		
 		return update;
 	}
+    
+    public String checkApplicationInput(Application app, List<List<Long>> data) {
+    	String error = "";
+    	
+    	Collection<IOPort> ports = app.getInputPorts();
+    	
+    	if (data != null) {
+    		for (List<Long> this_data : data) {
+    			if (this_data.size() != ports.size()) {
+    				error += "Warning, number of inputs: " + this_data.size() + " doesn't match number of ports: " + ports.size() + "\n";
+    			}
+    			
+    			for (Long dataId : this_data) {
+    				boolean checked = false;
+    				
+    				DataElement dataElement = persistenceManager.get.dataElement(dataId);
+    				
+    				if (dataElement != null) {
+    					for (IOPort port : ports) {
+    						if (dataElement.getPorts().contains(port)) {
+    							checked = true;
+    						}
+    					}
+    				}
+    				
+    				if (!checked) {
+    					error += "Data element " + dataElement.getDbId() + " doesn't match any of the ports";
+    				}
+    			}
+    		}
+    	}
+    	
+    	if (error.length() < 1) {
+    		return null;
+    	}
+    	
+    	return error;
+    }
 
     public void openSession() {
         logger.info("" + new Date() + " Opening a new session for user: " + liferayId.toString());
