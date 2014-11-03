@@ -1,0 +1,10 @@
+Dependencies:
+    lcg-util-python
+    lcg-util-devel
+    python-argparse
+    mysql-connector-python
+
+The script requires the following env variables to be aldready defined:
+    LFC_HOST
+    BDII_HOST
+    X509_USER_PROXY
