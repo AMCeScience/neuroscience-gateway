@@ -45,10 +45,9 @@ def getFileList(tExpiration, dbuser, dbpasswd, dbhost, dbdatabase):
                  "FROM `Replica` AS R "
                  "INNER JOIN `DataElement` AS D "
                  "ON R.`DataID` = D.`DataID` "
-                 "WHERE D.`Date` < NOW() - INTERVAL (%s) DAY" % tExpiration)
+                 "WHERE D.`Date` < NOW() - INTERVAL (%s) DAY")
 
-        print(query)
-        cursor.execute(query)
+        cursor.execute(query, (tExpiration))
         fileList = cursor.fetchall()
         cursor.close()
         cnx.close()
