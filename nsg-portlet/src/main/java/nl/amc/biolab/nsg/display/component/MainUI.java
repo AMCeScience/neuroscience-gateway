@@ -23,11 +23,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
-import nl.amc.biolab.config.exceptions.ReaderException;
-import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.objects.Application;
 import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.Processing;
@@ -40,15 +37,7 @@ import nl.amc.biolab.nsg.display.service.FieldService;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.LoggingFilter;
-import com.sun.jersey.api.json.JSONConfiguration;
 import com.vaadin.data.Container.Filter;
 import com.vaadin.data.Property;
 import com.vaadin.data.Property.ValueChangeEvent;
@@ -71,7 +60,6 @@ import com.vaadin.ui.Select;
 import com.vaadin.ui.Table;
 import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Window.Notification;
 
 /**
  *
@@ -134,7 +122,7 @@ public class MainUI extends CustomComponent {
 		app.getUserDataService().openSession();
 
 		if (app.getPage() == VaadinTestApplication.PROJECTS) {
-			logger.debug("We are in projects page. Setting project item list contents.");
+//			logger.debug("We are in projects page. Setting project item list contents.");
 			setProjectItemList();
 
 			if (app.getUserDataService().getProjectDbId() == null) {
@@ -145,10 +133,10 @@ public class MainUI extends CustomComponent {
 
 			hideEditor();
 		} else if (app.getPage() == VaadinTestApplication.DATA) {
-			logger.debug("We are in data page");
+//			logger.debug("We are in data page");
 
 			if (app.getUserDataService().getProjectDbId() == null) {
-				logger.debug("Setting project item list contents.");
+//				logger.debug("Setting project item list contents.");
 				setProjectItemList();
 
 				if (showNotification) {
@@ -162,21 +150,21 @@ public class MainUI extends CustomComponent {
 
 			hideEditor();
 
-			logger.debug("Setting data element item list contents.");
+//			logger.debug("Setting data element item list contents.");
 			setDataElementItemList(app.getUserDataService().getProjectDbId());
 		} else if (app.getPage() == VaadinTestApplication.PROCESSING) {
-			logger.debug("We are in processing page");
+//			logger.debug("We are in processing page");
 
 			if (app.getUserDataService().getProcessingDbId() != null) {
-				logger.debug("Setting processing status editor contents");
+//				logger.debug("Setting processing status editor contents");
 				setProcessingStatusEditor(app.getUserDataService().getProcessingDbId());
 			}
 
-			logger.debug("Setting processing item list contents");
+//			logger.debug("Setting processing item list contents");
 			setProccessingItemList();
 		}
 
-		logger.debug("Finished initilizaing the page.");
+//		logger.debug("Finished initializing the page.");
 	}
 
 	// page menus
@@ -289,7 +277,7 @@ public class MainUI extends CustomComponent {
 
 			public void valueChange(ValueChangeEvent event) {
 				Project project = (Project) itemList.getValue();
-				logger.debug("Selected a project: " + project);
+//				logger.debug("Selected a project: " + project);
 				if (project != null) {
 					app.getUserDataService().setProjectDbId(project.getDbId());
 					logger.debug("Project ID: " + project.getDbId());
@@ -333,7 +321,7 @@ public class MainUI extends CustomComponent {
 
 			@Override
 			public void itemClick(ItemClickEvent event) {
-				logger.debug("itemclicklistener");
+//				logger.debug("itemclicklistener");
 
 				processingButton.setVisible(true);
 			}
@@ -344,7 +332,7 @@ public class MainUI extends CustomComponent {
 
 			@Override
 			public void valueChange(ValueChangeEvent event) {
-				logger.debug("valuechangeevent");
+//				logger.debug("valuechangeevent");
 
 				dataElementsChange((DataElement) itemList.getValue());
 			}
@@ -352,7 +340,7 @@ public class MainUI extends CustomComponent {
 
 		itemList.addListener(itemListChangeListner);
 
-		logger.debug("finished setting data element item list");
+//		logger.debug("finished setting data element item list");
 	}
 
 	/**
@@ -362,7 +350,7 @@ public class MainUI extends CustomComponent {
 	 *            values
 	 */
 	private void dataElementsChange(DataElement dataElement) {
-		logger.debug("in dataelementschange");
+//		logger.debug("in dataelementschange");
 
 		Set<DataElement> values = new HashSet<DataElement>();
 
@@ -450,7 +438,7 @@ public class MainUI extends CustomComponent {
 	}
 
 	private void setProcessingEditor(Set<DataElement> dataElements) {
-		logger.debug("in setprocessingeditor");
+//		logger.debug("in setprocessingeditor");
 
 		final ProcessingForm pf = new ProcessingForm();
 
@@ -467,78 +455,38 @@ public class MainUI extends CustomComponent {
 		pf.addListener(new Listener() {
 			private static final long serialVersionUID = -2040377891185846134L;
 
-			@SuppressWarnings("unchecked")
 			@Override
 			public void componentEvent(Event event) {
 				if (((Button) event.getSource()).getCaption().equals(ProcessingForm.SUBMIT)) {
 					Processing processing = (Processing) ((Button) event.getSource()).getData();
 					
-					// Send to processing manager
-					JSONObject submission = new JSONObject();
 					JSONArray submits = new JSONArray();
 
-					try {
-						for (Long dbId : ((VaadinTestApplication) getApplication()).getUserDataService().getDataElementDbIds()) {
-							ArrayList<Long> filesPerPort = new ArrayList<Long>();
-							filesPerPort.add(dbId);
+					submits = app.getProcessingService().prepareSubmission(processing,
+							((VaadinTestApplication) getApplication()).getUserDataService().getDataElementDbIds());
 
-							submits.add(filesPerPort);
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+					// TODO check disabled
+					// String message =
+					// app.getUserDataService().checkApplicationInput(processing.getApplication(),
+					// submits);
+					//
+					// if (message != null) {
+					// logger.debug("Error before submit.");
+					//
+					// app.getMainWindow().showNotification(message.replaceAll("\n",
+					// "<br />"), Notification.TYPE_ERROR_MESSAGE);
+					// } else {
+					Long processingDbId = app.getProcessingService().submit(app.getUserDataService().getUserId(),
+							app.getUserDataService().getProjectDbId(), processing, submits);
 
-					submission.put("applicationId", processing.getApplication().getDbId());
-					submission.put("description", processing.getDescription());
-					submission.put("userId", app.getUserDataService().getUserId());
-					submission.put("projectId", processing.getProject().getDbId());
-					submission.put("submission", submits);
+					if (processingDbId != null) {
+						app.getUserDataService().setProcessingDbId(processingDbId);
 
-					String message = app.getUserDataService().checkApplicationInput(processing.getApplication(), submits);
-
-					if (message != null) {
-						app.getMainWindow().showNotification(message.replaceAll("\n", "<br />"), Notification.TYPE_ERROR_MESSAGE);
+						app.getMainWindow().open(new ExternalResource("processing"));
 					} else {
-						try {
-							ConfigurationManager config = new ConfigurationManager();
-						
-							ClientConfig clientConfig = new DefaultClientConfig();
-							clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-							Client client = Client.create(clientConfig);
-	
-							// Logging
-							client.addFilter(new LoggingFilter(System.out));
-	
-							WebResource webResource = client.resource(config.read.getStringItem("nsg", "processing_url"));
-	
-							ClientResponse response = webResource.accept("application/json").type("application/json").post(ClientResponse.class, submission);
-							
-							int response_code = response.getStatus();
-							Long processingDbId = null;
-							
-							if (response_code == 200) {
-								for (Entry<String, List<String>> entry : response.getHeaders().entrySet()) {
-									if (entry.getKey().equals("processingId")) {
-										processingDbId = Long.getLong(entry.getValue().get(0));
-									}
-								}
-		
-								app.getUserDataService().setProcessingDbId(processingDbId);
-							} else {
-								logger.debug("Error in REST #########################################");
-							}
-	
-							if (processingDbId != null) {
-								processing = app.getUserDataService().getProcessing(processingDbId);
-								
-								app.getMainWindow().open(new ExternalResource("processing"));
-							} else {
-								app.getMainWindow().showNotification("Failed to submit processing");
-							}
-						} catch (ReaderException e) {
-							app.getMainWindow().showNotification("Failed to submit processing (configuration file error)");
-						}
+						app.getMainWindow().showNotification("Failed to submit processing");
 					}
+					// }
 				}
 			}
 		});
@@ -564,7 +512,8 @@ public class MainUI extends CustomComponent {
 			@Override
 			public void componentEvent(Event event) {
 				DisplayProcessingStatus processingStatus = (DisplayProcessingStatus) ((AbstractComponent) event.getSource()).getData();
-				logger.debug(processingStatus);
+//				logger.debug(processingStatus);
+				
 				if (processingStatus != null) {
 					psf.setProcessingStatus(app.getProcessingService().getProcessingStatus(
 							app.getUserDataService().getProcessing(processingStatus.getProcessing().getDbId()), app.getUserDataService().getUserId(),

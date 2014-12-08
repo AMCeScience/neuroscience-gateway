@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nl.amc.biolab.config.exceptions.ReaderException;
 import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.manager.PersistenceManager;
 import nl.amc.biolab.datamodel.objects.Application;
@@ -40,7 +41,7 @@ import nl.amc.biolab.datamodel.objects.SubmissionIO;
 import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.datamodel.objects.UserAuthentication;
 import nl.amc.biolab.tools.BlobHandler;
-import nl.amc.biolab.xnat.tools.XNATplugin;
+import nl.amc.biolab.xnat.tools.XnatClient;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -102,7 +103,7 @@ public class UserDataService {
         
         openSession();
 
-        logger.debug("Finalizing the creation of the user data service object.");
+		//        logger.debug("Finalizing the creation of the user data service object.");
         
         User user = null;
         user = persistenceManager.get.user(liferayId.toString());
@@ -323,13 +324,15 @@ public class UserDataService {
 
         try {
             for (Submission sub : persistenceManager.get.processing(processingDbId).getSubmissions()) {
-                logger.debug("\tsubmission: " + sub.getDbId() + ": "
-                        + sub.getName());
+                logger.debug("\tsubmission: " + sub.getDbId() + ": " + sub.getName());
+            	
                 Map<List<SubmissionIO>, List<SubmissionIO>> map = new HashMap<List<SubmissionIO>, List<SubmissionIO>>();
                 List<SubmissionIO> input = new ArrayList<SubmissionIO>();
                 List<SubmissionIO> output = new ArrayList<SubmissionIO>();
+                
                 for (SubmissionIO io : persistenceManager.get.submission(sub.getDbId()).getSubmissionInputs()) {
                     input.add(io);
+                    
                     logger.debug("\tinput: "
                             + io.getDataElement().getURI() + " on port "
                             + io.getPort().getPortNumber() + ", named "
@@ -339,12 +342,14 @@ public class UserDataService {
 
                 for (SubmissionIO io : persistenceManager.get.submission(sub.getDbId()).getSubmissionOutputs()) {
                     output.add(io);
+                    
                     logger.debug("\toutput: " + ": "
                             + io.getDataElement().getURI() + " on port "
                             + io.getPort().getPortNumber() + ", named "
                             + io.getPort().getPortName() + ", type:  "
                             + io.getType());
                 }
+                
                 map.put(input, output);
                 submissionIOs.add(map);
             }
@@ -406,10 +411,46 @@ public class UserDataService {
      *
      * @throws SynchXNAT checkUser RuntimeException
      */
-    public User xnatLogin() {
-    	XNATplugin xnat = new XNATplugin();
-    	
-        return xnat.checkUser(liferayId.toString());
+    public boolean xnatLogin() {
+    	Long resourceId = 1L;
+		User user = persistenceManager.get.user(liferayId.toString());
+		boolean return_val = false;
+
+		if (user == null) {
+			logger.error("User '" + liferayId + "' Doesn't exist in the NSG catalogue");
+
+			throw new RuntimeException("No User.");
+		}
+
+		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), resourceId);
+		
+		if (userAuth == null) {
+			logger.error("No Credentials are set for user'" + liferayId + "' on resource " + resourceId);
+
+			throw new RuntimeException("Wrong Password.");
+		}
+
+		if (userAuth.getAuthentication() == null) {
+			logger.error("Password is not set for user'" + liferayId + "' on resource " + resourceId);
+
+			throw new RuntimeException("No Password.");
+		}
+		
+		try {
+			XnatClient xnat = new XnatClient(ConfigurationManager.read.getStringItem("xnat", "xnat_host"));
+			
+			BlobHandler handler = new BlobHandler();
+			
+			return_val = xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()));
+		} catch (ReaderException e) {
+			e.printStackTrace();
+		}
+		
+		if (return_val == false) {
+			throw new RuntimeException("Wrong Password.");
+		}
+		
+		return return_val;
     }
     
     public boolean checkAuthentication(User user) {
@@ -444,8 +485,6 @@ public class UserDataService {
     	String toReturn="";
     	
         try {
-        	ConfigurationManager config = new ConfigurationManager();
-        	
         	DataElement de = persistenceManager.get.dataElement(dataId);
         	
             if (de==null) {
@@ -458,7 +497,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("?format=zip"));
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -469,8 +508,6 @@ public class UserDataService {
     	String toReturn="";
     	
         try {
-        	ConfigurationManager config = new ConfigurationManager();
-        	
         	DataElement de = persistenceManager.get.dataElement(dataId);
         	
             if (de==null) {
@@ -483,7 +520,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+11);
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -494,8 +531,6 @@ public class UserDataService {
     	String toReturn="";
     	
         try {
-        	ConfigurationManager config = new ConfigurationManager();
-        	
             DataElement de = persistenceManager.get.dataElement(dataId);
             
             if (de==null) {
@@ -508,7 +543,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+10);
             }
             
-            return toReturn.replace(config.read.getStringItem("xnat", "xnat_tunnel_path"), config.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -530,6 +565,19 @@ public class UserDataService {
 		
 		return update;
 	}
+    
+    @SuppressWarnings("unchecked")
+	public DataElement getMatchingInput(String sessionUri, String requestedType) {
+        try {
+        	List<DataElement> results = persistenceManager.query.executeQuery("from DataElement where URI LIKE '%"+sessionUri+"%' AND Type = '"+requestedType+"'");
+
+            return results.iterator().next();
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+        
+        return null;
+    }
     
     public String checkApplicationInput(Application app, List<List<Long>> data) {
     	String error = "";
@@ -620,9 +668,9 @@ public class UserDataService {
     		dynamicStr += "\ttxts[" + nlinks + "] = \"" + data.getName() + "\"; \n";
     		nlinks++;
 
-    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("subject") + "');\n";
+    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("xnat_subject_id") + "');\n";
     		dist +=12;
-    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Scan ID:     " + data.getValueByName("scan_id") + "');\n";
+    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Scan ID:     " + data.getValueByName("xnat_scan_id") + "');\n";
     		dist +=24;
     		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Data Type:   " + data.getType() + "');\n";
     		dist +=12;
@@ -704,9 +752,9 @@ public class UserDataService {
 
     			        body = body + "\tarrow2(ctx,end,5);\n";
     	
-    					body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("subject") + "');\n";
+    					body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("xnat_subject_id") + "');\n";
     					dist +=12;
-    					body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Scan ID:     " + data.getValueByName("scan_id") + "');\n";
+    					body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Scan ID:     " + data.getValueByName("xnat_scan_id") + "');\n";
     					dist +=24;
     					body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Data Type:   " + data.getType() + "');\n";
     					dist +=12;
@@ -1078,13 +1126,13 @@ public String getProcessingReport(Long pId) {
 			for (SubmissionIO subio:sub.getSubmissionIOs()) {
 				if (subio.getType().equalsIgnoreCase("Input")) {
 					inputs += "\t\t<Input Name=\"" + subio.getDataElement().getName() + "\" Date=\"" + subio.getDataElement().getDate();
-					inputs += "\" Size=\"" + subio.getDataElement().getSize() + "\" ScanID=\"" + subio.getDataElement().getValueByName("scan_id") + "\" />\n";
+					inputs += "\" Size=\"" + subio.getDataElement().getSize() + "\" ScanID=\"" + subio.getDataElement().getValueByName("xnat_scan_id") + "\" />\n";
 					sizeInput += subio.getDataElement().getSize();
 					in++;
 				}
 				if (subio.getType().equalsIgnoreCase("Output")) {
 					outputs += "\t\t<Input Name=\"" + subio.getDataElement().getName() + "\" Date=\"" + subio.getDataElement().getDate();
-					outputs += "\" Size=\"" + subio.getDataElement().getSize() + "\" ScanID=\"" + subio.getDataElement().getValueByName("scan_id") + "\" />\n";									
+					outputs += "\" Size=\"" + subio.getDataElement().getSize() + "\" ScanID=\"" + subio.getDataElement().getValueByName("xnat_scan_id") + "\" />\n";									
 					sizeOutput += subio.getDataElement().getSize();
 					out++;
 				}

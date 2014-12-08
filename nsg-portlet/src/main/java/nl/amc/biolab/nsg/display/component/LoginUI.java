@@ -21,7 +21,6 @@ package nl.amc.biolab.nsg.display.component;
 import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.control.MainControl;
-import nl.amc.biolab.xnat.tools.ErrorMessages;
 
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
@@ -53,9 +52,11 @@ public class LoginUI extends CustomComponent {
 		layout.setWidth("100%");
 		layout.setHeight("300px");
 		layout.addComponent(form);
+		
 		setCompositionRoot(layout);
 
 		final PasswordField xnatPassword = new PasswordField("Please enter your XNAT password");
+		
 		xnatPassword.setRequired(true);
 		
 		form.addField("xnatPassword", xnatPassword);
@@ -106,9 +107,7 @@ public class LoginUI extends CustomComponent {
 			app.getUserDataService().setPassword(password);
 			app.getUserDataService().xnatLogin();
 		} catch (RuntimeException e) {
-			ErrorMessages errors = new ErrorMessages();
-
-			if (e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword())) {
+			if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
 				app.getMainWindow().showNotification("Please (re)enter your XNAT password");
 				
 				return null;

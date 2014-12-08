@@ -61,12 +61,16 @@ public class MainControl {
         this();
         this.app = app;
         this.mainWindow = app.getMainWindow();
+        
         layout.setWidth("100%");
         layout.setHeight("100%");
+        
         User user = null;
+        
         if (app.getUserDataService() != null) {
             user = app.getUserDataService().getUser();
         }
+        
         init(user);
     }
 
@@ -84,11 +88,15 @@ public class MainControl {
         } else if (app.getUserDataService() != null) {
             if (app.getUserDataService().checkAuthentication(user)) { 
                 layout.removeAllComponents();
+                
                 mainUI = new MainUI(this);
+                
                 layout.addComponent(mainUI);
             } else { // user has no xnat password in catalog
                 layout.removeAllComponents();
+                
                 LoginUI loginUI = new LoginUI(this);
+                
                 loginUI.addListener(new Listener() {
 					private static final long serialVersionUID = -8728443364176948015L;
 
@@ -97,6 +105,7 @@ public class MainControl {
                         mainControl.init((User) ((Button) event.getSource()).getData());
                     }
                 });
+                
                 layout.addComponent(new LoginUI(this));
             }
         } else {
@@ -111,8 +120,10 @@ public class MainControl {
 
     public void update() {
         logger.debug("MainControl.update is about to initialize the interface");
+        
         if (mainUI != null) {
             mainUI.init(true);
+            
             logger.debug("MainControl.update finished initialization.");
         }
     }

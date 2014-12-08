@@ -29,7 +29,6 @@ import nl.amc.biolab.nsg.display.control.MainControl;
 import nl.amc.biolab.nsg.display.service.FieldService;
 import nl.amc.biolab.nsg.display.service.ProcessingService;
 import nl.amc.biolab.nsg.display.service.UserDataService;
-import nl.amc.biolab.xnat.tools.ErrorMessages;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -127,17 +126,17 @@ public class VaadinTestApplication extends Application implements PortletRequest
         // If no userDataService is set yet, or the user is not logged in yet
         // Set the userDataService and check XNAT connectivity
         // Parses errors coming back and displays them in the application when necessary
-        if (userDataService == null || userDataService.xnatLogin() == null) {
-        	ErrorMessages errors = new ErrorMessages();
-        	
+        if (userDataService == null || userDataService.xnatLogin() == false) {
             try {
                 setUserDataService(((User) getUser()).getScreenName(), ((User) getUser()).getUserId());
                 
-				if(getPage() == DATA && this.getUserDataService() != null && this.getUserDataService().getUserId() == 0L && getUserDataService().getProjectDbId() == null) {
+				if(getPage() == DATA && this.getUserDataService() != null 
+						&& this.getUserDataService().getUserId() == 0L 
+						&& getUserDataService().getProjectDbId() == null) {
 					this.getUserDataService().xnatLogin();
 				}
             } catch (RuntimeException e) {
-                if (e == null || e.getMessage() == null || !(e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword()) || e.getMessage().equals(errors.noUser()))) {
+                if (e == null || e.getMessage() == null || (!(e.getMessage().equals("No Password.") && !e.getMessage().equals("Wrong Password.") && !e.getMessage().equals("No User login.")))) {
                     HorizontalLayout layout = new HorizontalLayout();
                     
                     Label label = new Label("Server error. Please contact the administrator");
@@ -151,11 +150,11 @@ public class VaadinTestApplication extends Application implements PortletRequest
                     getMainWindow().addComponent(layout);
                     
                     return;
-                } else if (e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword())) {
+                } else if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
                     getMainWindow().removeAllComponents();
                     getMainWindow().showNotification("Please enter your XNAT password");
-                } else if (e.getMessage().equals(errors.noUser())) {
-                    getMainWindow().showNotification(errors.noUser());
+                } else if (e.getMessage().equals("No User login.")) {
+                    getMainWindow().showNotification("No User login.");
                     
                     HorizontalLayout layout = new HorizontalLayout();
                     
@@ -184,7 +183,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
         
         this.mainControl = new MainControl(this);
         
-        logger.debug("Finished creating the application and the components.");
+//        logger.debug("Finished creating the application and the components.");
     }
 
     @Override
@@ -214,9 +213,9 @@ public class VaadinTestApplication extends Application implements PortletRequest
     public void onRequestStart(PortletRequest request, PortletResponse response) {
         this.portletSession = request.getPortletSession();
 
-        final Object phase = request.getAttribute("javax.portlet.lifecycle_phase");
+//        final Object phase = request.getAttribute("javax.portlet.lifecycle_phase");
 
-        logger.debug("Lifecycle phase is: " + phase);
+//        logger.debug("Lifecycle phase is: " + phase);
         
         if (getUser() == null) {
             logger.debug("User is null, so checking theme display.");
@@ -237,7 +236,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
             setUser(themeDisplay.getUser());
         }
 
-        logger.debug("Setting the URL and page.");
+//        logger.debug("Setting the URL and page.");
         
         if (PortalUtil.getCurrentURL(request).contains(PROJECTS_URL)) {
             this.page = PROJECTS;
@@ -258,20 +257,18 @@ public class VaadinTestApplication extends Application implements PortletRequest
                 if (portletSession.getAttribute(SESS_PROJECT, PortletSession.APPLICATION_SCOPE) != null) {
                     final Long projectId = (Long) portletSession.getAttribute(SESS_PROJECT, PortletSession.APPLICATION_SCOPE);
                     getUserDataService().setProjectDbId(projectId);
-                    logger.debug("Selected Project is: " + projectId);
+//                    logger.debug("Selected Project is: " + projectId);
                 }
 
                 if (portletSession.getAttribute(SESS_PROCESSING, PortletSession.APPLICATION_SCOPE) != null) {
                     getUserDataService().setProcessingDbId((Long) portletSession.getAttribute(SESS_PROCESSING, PortletSession.APPLICATION_SCOPE));
-                    logger.debug("Processing session is read.");
+//                    logger.debug("Processing session is read.");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             
             if (PortalUtil.getCurrentURL(request).contains("wsver") && mainControl != null) {
-            	ErrorMessages errors = new ErrorMessages();
-            	
                 try {
                     if (getPage() == DATA && (this.getUserDataService().getUserId() == 0L || getUserDataService().getProjectDbId() != null)) {
                         this.getUserDataService().xnatLogin();
@@ -279,7 +276,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
                     
                     mainControl.update();
                 } catch (RuntimeException e) {
-                    if (e == null || e.getMessage() == null || !(e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword()) || e.getMessage().equals(errors.noUser()))) {
+                    if (e == null || e.getMessage() == null || !(e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.") || e.getMessage().equals("No User login."))) {
                         HorizontalLayout layout = new HorizontalLayout();
                         
                         Label label = new Label("Server error. Please sign out and sign in again, and if the problem persists, contact the administrator.");
@@ -295,7 +292,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
                         e.printStackTrace();
                         
                         return;
-                    } else if (e.getMessage().equals(errors.noPassword()) || e.getMessage().equals(errors.wrongPassword())) {
+                    } else if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
                         HorizontalLayout layout = new HorizontalLayout();
                         
                         layout.removeAllComponents();
@@ -316,8 +313,8 @@ public class VaadinTestApplication extends Application implements PortletRequest
                         getMainWindow().removeAllComponents();
                         getMainWindow().showNotification("Your XNAT password was not recognized.");
                         getMainWindow().addComponent(layout);
-                    } else if (e.getMessage().equals(errors.noUser())) { //nsgdm api not returning this message?
-                        getMainWindow().showNotification(errors.noUser());
+                    } else if (e.getMessage().equals("No User login.")) { //nsgdm api not returning this message?
+                        getMainWindow().showNotification("No User login.");
                         
                         HorizontalLayout layout = new HorizontalLayout();
                         

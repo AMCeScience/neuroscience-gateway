@@ -89,12 +89,12 @@ public class ProcessingForm extends Form {
 
 	public void setProcessingFields() {
 		Map<String, Field> fields = new HashMap<String, Field>();
-                
+
 		app.setImmediate(false);
 		app.setWidth("79%");
 		app.setHeight("-1px");
 		app.setRequired(true);
-		app.setRequiredError("Application is required");
+		app.setRequiredError("Application is required 321");
 		app.setCaption("Application");
 		fields.put("application", app);
 
@@ -133,92 +133,92 @@ public class ProcessingForm extends Form {
 		});
 	}
 
-	public Processing getProcessing(){
+	public Processing getProcessing() {
 		return processing;
 	}
 
 	public void setProcessing(Set<DataElement> inputDataList, List<Application> applications) {
 		this.processing = new Processing();
-		
+
 		processing.setName((String) name.getValue());
-		
+
 		setItemDataSource((Item) new BeanItem<Processing>(processing), fields.keySet());
-		
-		//applications
-		Select app2 = new Select();
-		
-		app2.setImmediate(false);
-		app2.setWidth("97%");
-		app2.setHeight("-1px");
-		app2.setRequired(true);
-		app2.setRequiredError("Application is required");
-		app2.setCaption("Application");
-		
-		layout.replaceComponent(app, app2);
-		layout.removeComponent(app);
-		
-		app = app2;
-		
-		fields.put("application", app);
+
+		// applications
+		//Select app = new Select();
+
+//		app2.setImmediate(false);
+//		app2.setWidth("97%");
+//		app2.setHeight("-1px");
+//		app2.setRequired(true);
+//		app2.setRequiredError("Application is required 123");
+//		app2.setCaption("Application");
+
+//		layout.replaceComponent(app, app2);
+//		layout.removeComponent(app);
+
+//		app = app2;
+
+//		fields.put("application", app);
 
 		app.setNullSelectionAllowed(false);
 		app.setNewItemsAllowed(false);
 		app.setItemCaptionMode(Select.ITEM_CAPTION_MODE_PROPERTY);
 		app.setItemCaptionPropertyId("name");
-		
+
 		BeanItemContainer<Application> abic = new BeanItemContainer<Application>(Application.class);
 		abic.addAll(applications);
-		
+
 		app.setContainerDataSource(abic);
-		
-		//application description
+
+		// application description
 		if (applications != null && applications.size() != 0) {
 			tempApp = applications.get(0);
-			
+
 			app.setValue(applications.get(0).getDbId());
 			app.select(applications.get(0));
-			
+
 			appDescription.setLabelValue(applications.get(0).getDescription());
-			
+
 			app.addListener(new Property.ValueChangeListener() {
 				private static final long serialVersionUID = -5315052115453471609L;
 
 				@Override
 				public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
 					LabelField lf = new LabelField();
-					
+
 					lf.addStyleName("bordered");
 					lf.setLabelValue(tempApp.getDescription());
-					
+
 					layout.replaceComponent(appDescription, lf);
-					
+
 					appDescription = lf;
-					
+
 					fields.put("description", appDescription);
 				}
 			});
 		}
 
-		//dateElements
+		// dateElements
 		if (inputDataList != null) {
-			for(DataElement de: inputDataList ) {
+			for (DataElement de : inputDataList) {
 				dataElements.add(de);
 			}
 		}
-		
+
 		setInputData(dataElements);
 	}
 
 	public void setInputData(Set<DataElement> inputDataList) {
 		BeanItemContainer<DataElement> dbic = new BeanItemContainer<DataElement>(DataElement.class);
-		if(inputDataList != null && inputDataList.size() != 0) {
+		if (inputDataList != null && inputDataList.size() != 0) {
 			dbic.addAll(Arrays.asList(inputDataList.toArray(new DataElement[0])));
 		}
 		inputData.setContainerDataSource(dbic);
 		inputData.setItemCaptionMode(Select.ITEM_CAPTION_MODE_PROPERTY);
 		inputData.setItemCaptionPropertyId("name");
 		inputData.setMultiSelect(true);
-		for(Object iid: inputData.getItemIds()) {
+		for (Object iid : inputData.getItemIds()) {
 			inputData.select(iid);
 		}
 	}
@@ -230,6 +230,7 @@ public class ProcessingForm extends Form {
 		getLayout().addComponent(buttons);
 
 		final Button startButton = new NativeButton();
+		
 		startButton.setCaption(SUBMIT);
 		startButton.setImmediate(true);
 		startButton.setWidth("-1px");
@@ -238,18 +239,39 @@ public class ProcessingForm extends Form {
 			private static final long serialVersionUID = 1906358615316029946L;
 
 			public void buttonClick(ClickEvent event) {
+				System.out.println("check");
+				System.out.println(app.getValue());
+				
 				Set<Long> inputDbIds = new HashSet<Long>();
-				for(Object iid: inputData.getItemIds()) {
+				
+				for (Object iid : inputData.getItemIds()) {
 					inputData.select(iid);
-					inputDbIds.add(((DataElement)iid).getDbId());
+					
+					inputDbIds.add(((DataElement) iid).getDbId());
 				}
-				((VaadinTestApplication)getApplication()).getUserDataService().setDataElementDbIds(inputDbIds);
+				
+				((VaadinTestApplication) getApplication()).getUserDataService().setDataElementDbIds(inputDbIds);
+				
 				form.commit();
+				
+				System.out.println("Before app select.");
+				
 				processing.setApplication((Application) app.getValue());
+				
+				System.out.println(app.getValue());
+				
+				System.out.println("After app select.");
+				
 				startButton.setData(processing);
+				
+				System.out.println(processing.getApplication());
+				
+				System.out.println("After set data");
+				
 				form.fireEvent(new Event(startButton));
 			}
 		});
+		
 		buttons.addComponent(startButton);
 		buttons.setComponentAlignment(startButton, Alignment.TOP_RIGHT);
 
@@ -263,8 +285,8 @@ public class ProcessingForm extends Form {
 
 			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
-				if(inputData.getValue() != null) {
-					for(DataElement de: (Set<DataElement>) inputData.getValue() ) {
+				if (inputData.getValue() != null) {
+					for (DataElement de : (Set<DataElement>) inputData.getValue()) {
 						inputData.removeItem(de);
 						dataElements.remove(de);
 					}

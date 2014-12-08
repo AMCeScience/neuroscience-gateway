@@ -508,7 +508,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
 			@Override
             public void buttonClick(ClickEvent event) {
-                logger.debug("Cancel button is clicked.");
+//                logger.debug("Cancel button is clicked.");
                 processingService.markFailed(processingStatus.getProcessing().getDbId());
                 processingStatusForm.fireValueChange(false);
             }
@@ -522,7 +522,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
 			@Override
             public void buttonClick(ClickEvent event) {
-                logger.debug("Delete Files button is clicked.");
+//                logger.debug("Delete Files button is clicked.");
                 getApplication().getMainWindow().showNotification("Not implemented yet.");
             }
         });
@@ -535,7 +535,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
 			@Override
             public void buttonClick(ClickEvent event) {
-                logger.debug("Report button is clicked.");
+//                logger.debug("Report button is clicked.");
                 final String htmlContent = userDataService.getProcessingReport(processingStatus.getProcessing().getDbId());
                 showHTML(htmlContent, app);
             }
@@ -549,7 +549,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 
 			@Override
             public void buttonClick(ClickEvent event) {
-                logger.debug("Restart button is clicked.");
+//                logger.debug("Restart button is clicked.");
                 processingService.restart(processingStatus.getProcessing().getDbId());
                 processingStatusForm.fireValueChange(false);
             }

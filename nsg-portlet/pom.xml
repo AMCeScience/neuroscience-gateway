@@ -21,17 +21,17 @@
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>config-manager</artifactId>
-						<version>1.0.6-SNAPSHOT</version>
+						<version>1.0.10-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>nsgdm-api</artifactId>
-						<version>2.3.5-SNAPSHOT</version>
+						<version>2.4.2-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>xnat-sync</artifactId>
-						<version>0.0.2-SNAPSHOT</version>
+						<version>0.0.3-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 					<groupId>com.sun.jersey</groupId>
