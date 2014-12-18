@@ -43,6 +43,7 @@ public class FieldService {
 		{
 			put("name", "name");
 			put("description", "description");
+			put("resource", "resource");
 		}};
 		
 		fieldHeader.put(Project.class.getName(), map);
@@ -53,8 +54,9 @@ public class FieldService {
 		{
 			put("date", "date");
 			put("type", "type");
+			put("subject", "subject");
 			put("format", "format");
-			put("resource.name", "source");
+			put("resource", "source");
 		}};
 		
 		fieldHeader.put(DataElement.class.getName(), map);

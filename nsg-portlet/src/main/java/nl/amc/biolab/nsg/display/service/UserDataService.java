@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import nl.amc.biolab.config.exceptions.ReaderException;
@@ -35,11 +36,15 @@ import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.IOPort;
 import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.datamodel.objects.Project;
+import nl.amc.biolab.datamodel.objects.Resource;
 import nl.amc.biolab.datamodel.objects.Status;
 import nl.amc.biolab.datamodel.objects.Submission;
 import nl.amc.biolab.datamodel.objects.SubmissionIO;
 import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.datamodel.objects.UserAuthentication;
+import nl.amc.biolab.nsg.dataobjects.NsgDataElement;
+import nl.amc.biolab.nsg.dataobjects.NsgProject;
+import nl.amc.biolab.nsg.dataobjects.NsgProperty;
 import nl.amc.biolab.tools.BlobHandler;
 import nl.amc.biolab.xnat.tools.XnatClient;
 
@@ -193,39 +198,51 @@ public class UserDataService {
      *
      * @return projects of current user
      */
-    public List<Project> getProjects() {
-        List<Project> projects = null;
+    public List<NsgProject> getProjects() {
+    	List<Project> projects = null;
+        List<NsgProject> nsg_projects = new ArrayList<NsgProject>();
+        
         try {
             projects = persistenceManager.get.projects();
+            
+            for (Project project : projects) {
+            	Resource resource = persistenceManager.get.resource(Long.parseLong(project.getValueByName("resource_id")));
+            	String resource_name = "";
+            	
+            	if (resource != null) {
+            		resource_name = resource.getName();
+            	}
+            	
+            	nsg_projects.add(new NsgProject(project, resource_name));
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
 
-        if (projects == null) {
-            projects = new ArrayList<Project>();
-        }
-
-        return (projects != null) ? projects : new ArrayList<Project>();
+        return nsg_projects;
     }
 
-    public Collection<DataElement> getProjectData(Long projectDbId) {
+    public Collection<NsgDataElement> getProjectData(Long projectDbId) {
     	Collection<DataElement> dataElements = new ArrayList<DataElement>();
+    	Collection<NsgDataElement> nsgDataElements = new ArrayList<NsgDataElement>();
 
         if (projectDbId == null) {
-            return dataElements;
+            return nsgDataElements;
         }
 
         try {
             dataElements = persistenceManager.get.project(projectDbId).getDataElements();
+            
+            for(DataElement element : dataElements) {
+            	if (element.getExisting()) {
+            		nsgDataElements.add(new NsgDataElement(element));
+            	}
+            }
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
 
-        if (dataElements == null) {
-            dataElements = new ArrayList<DataElement>();
-        }
-
-        return dataElements;
+        return nsgDataElements;
     }
 
     public DataElement getDataElement(Long dbId) {
@@ -803,6 +820,39 @@ public class UserDataService {
        }
     	   
       return null;
+    }
+    
+    public List<NsgProperty> getMetaData(DataElement dataElement) {
+        List<NsgProperty> metaData = new ArrayList<NsgProperty>();
+        
+		try {
+			XnatClient xnat = new XnatClient(ConfigurationManager.read.getStringItem("xnat", "xnat_host"));
+			
+			if (xnat.checkAvailability()) {
+	    		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(getUser().getDbId(), 1L);
+	    		
+	    		BlobHandler handler = new BlobHandler();
+	    		
+	    		if (xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()))) {
+	    			Project project = persistenceManager.get.project(projectDbId);
+	    			
+	    			HashMap<String, String> rawData = xnat.getXnatMetadata(project.getName(), dataElement.getURI());
+	    			
+	    			Iterator<Entry<String, String>> rawResult = rawData.entrySet().iterator();
+	    			
+	    			while (rawResult.hasNext()) {
+						Map.Entry<String, String> pair = (Map.Entry<String, String>) rawResult.next();
+	    				
+	    				metaData.add(new NsgProperty(pair.getKey(), pair.getValue()));
+	    			}
+	    		}
+	    	}
+		} catch (ReaderException e) {
+			e.printStackTrace();
+		}
+
+        return metaData;
+
     }
 
 

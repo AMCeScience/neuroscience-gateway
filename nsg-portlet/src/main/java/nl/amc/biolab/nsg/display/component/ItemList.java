@@ -78,17 +78,16 @@ public class ItemList<T> extends Table {
 		Iterator<String> iter = fields.keySet().iterator();
 		
 		while(iter.hasNext()) {
-			String f = iter.next();
+			String column_name = iter.next();
 			
-			if (!f.contains(".")) {
-				addContainerProperty(f, String.class, "");
+			if (!column_name.contains(".")) {
+				addContainerProperty(column_name, String.class, "");
 			} else {
-				bic.addNestedContainerProperty(f);
-
+				bic.addNestedContainerProperty(column_name);
 			}
 			
-			setColumnHeader(f, fields.get(f));
-            setColumnExpandRatio(f, 1);
+			setColumnHeader(column_name, fields.get(column_name));
+            setColumnExpandRatio(column_name, 1);
 		}
         
         setItemDescriptionGenerator(new ItemDescriptionGenerator() {
@@ -96,9 +95,10 @@ public class ItemList<T> extends Table {
 
 			@Override
             public String generateDescription(Component source, Object itemId, Object propertyId) {
-                if (! (itemId instanceof Processing)){
+				if (!(itemId instanceof Processing)){
                     return null;
                 }
+                
                 if ("date".equals(propertyId)) {
                     return "Start date: "+new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(((Processing) itemId).getDate());
                 } else if ("project.name".equals(propertyId)) {
@@ -115,11 +115,12 @@ public class ItemList<T> extends Table {
                     final User owner = ((Processing) itemId).getUser();
                     String user = owner.getFirstName() + " " + owner.getLastName();
                     return user;
-                }  
+                }
+                
                 return null;
             }
         });
-
+        
 		bic.addAll(items);
 		setContainerDataSource(bic);
 		setVisibleColumns(fields.keySet().toArray());

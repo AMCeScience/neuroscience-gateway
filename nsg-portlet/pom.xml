@@ -31,7 +31,7 @@
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>xnat-sync</artifactId>
-						<version>0.0.3-SNAPSHOT</version>
+						<version>0.0.4-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 					<groupId>com.sun.jersey</groupId>

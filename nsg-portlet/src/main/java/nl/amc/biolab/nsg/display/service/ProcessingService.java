@@ -204,9 +204,11 @@ public class ProcessingService {
 		} else {
 			return null;
 		}
-
-		returnURI = "base_string " + reconString + " xnat_project_id " + xnatID + " base_data_type " + baseDataType + " xnat_subject_id " + subject + " xnat_scan_id "
-				+ scanID + " application_name " + applicationName + " reconstruction_type " + reconstructionType;
+		
+		returnURI = "base_string " + reconString.replace(" ", "_") + " xnat_project_id " + xnatID.replace(" ", "_") 
+				+ " base_data_type " + baseDataType.replace(" ", "_") + " xnat_subject_id " + subject.replace(" ", "_") 
+				+ " xnat_scan_id " + scanID.replace(" ", "_") + " application_name " + applicationName.replace(" ", "_")
+				+ " reconstruction_type " + reconstructionType.replace(" ", "_");
 
 		returnName = subject + ".Recon." + scanID + "." + reconstructionType;
 		
@@ -214,7 +216,7 @@ public class ProcessingService {
 
 		HashMap<String, String> returnVal = new HashMap<String, String>();
 		
-		returnVal.put("name", returnName);
+		returnVal.put("name", returnName.replace(" ", "_"));
 		returnVal.put("uri", returnURI);
 		
 		return returnVal;

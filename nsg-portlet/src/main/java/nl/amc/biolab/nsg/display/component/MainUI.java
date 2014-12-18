@@ -29,6 +29,9 @@ import nl.amc.biolab.datamodel.objects.Application;
 import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.datamodel.objects.Project;
+import nl.amc.biolab.nsg.dataobjects.NsgDataElement;
+import nl.amc.biolab.nsg.dataobjects.NsgProject;
+import nl.amc.biolab.nsg.dataobjects.NsgProperty;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.control.MainControl;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
@@ -83,6 +86,7 @@ public class MainUI extends CustomComponent {
 	private NativeButton elementsButton;
 	private NativeButton processingsButton;
 	private NativeButton processingButton;
+    private NativeButton dataElementButton;
 
 	private Button searchButton;
 	private Button newSearchButton;
@@ -169,6 +173,19 @@ public class MainUI extends CustomComponent {
 
 	// page menus
 	public void setPageMenu() {
+		dataElementButton.setVisible(false);
+        dataElementButton.addListener(new Button.ClickListener() {
+			private static final long serialVersionUID = -7033937988476912073L;
+
+            public void buttonClick(ClickEvent event) {
+                if (itemList.getValue() == null) {
+                    return;
+                }
+                
+                setDataElementEditor(((NsgDataElement) itemList.getValue()).getDataElement());
+            }
+        });
+		
 		processingButton.setVisible(false);
 		processingButton.addListener(new Button.ClickListener() {
 			private static final long serialVersionUID = -7033937988476912073L;
@@ -180,7 +197,7 @@ public class MainUI extends CustomComponent {
 
 				Set<DataElement> des = new HashSet<DataElement>();
 
-				des.add((DataElement) itemList.getValue());
+				des.add(((NsgDataElement) itemList.getValue()).getDataElement());
 
 				setProcessingEditor(des);
 			}
@@ -256,9 +273,10 @@ public class MainUI extends CustomComponent {
 		Map<String, String> fields = fieldService.getFieldHeaders(Project.class.getName());
 		setSearchSelect(fields);
 
+		dataElementButton.setVisible(false);
 		processingButton.setVisible(false);
 
-		setItemList("projects", new ItemList<Project>(app.getUserDataService().getProjects(), null, fields, Project.class));
+		setItemList("projects", new ItemList<NsgProject>(app.getUserDataService().getProjects(), null, fields, NsgProject.class));
 		itemList.setMultiSelect(false);
 		itemList.setSortContainerPropertyId("name");
 		itemList.setSortAscending(true);
@@ -276,7 +294,7 @@ public class MainUI extends CustomComponent {
 			private static final long serialVersionUID = -2238113264863971216L;
 
 			public void valueChange(ValueChangeEvent event) {
-				Project project = (Project) itemList.getValue();
+				NsgProject project = (NsgProject) itemList.getValue();
 //				logger.debug("Selected a project: " + project);
 				if (project != null) {
 					app.getUserDataService().setProjectDbId(project.getDbId());
@@ -293,22 +311,30 @@ public class MainUI extends CustomComponent {
 
 	public void setDataElementItemList(Long projectId) {
 		Map<String, String> fields = fieldService.getFieldHeaders(DataElement.class.getName());
+		
 		setSearchSelect(fields);
-
-		List<DataElement> elements = new ArrayList<DataElement>(app.getUserDataService().getProjectData(projectId));
+		
+		List<NsgDataElement> elements = new ArrayList<NsgDataElement>(app.getUserDataService().getProjectData(projectId));
 
 		// last selected
 		Set<Long> selectedDbIds = app.getUserDataService().getDataElementDbIds();
 
 		// itemList
-		setItemList("data", new ItemList<DataElement>(elements, selectedDbIds, fields, DataElement.class));
+		setItemList("data", new ItemList<NsgDataElement>(elements, selectedDbIds, fields, NsgDataElement.class));
 
 		itemList.setSortContainerPropertyId("subject");
 		itemList.setSortAscending(true);
 		itemList.sort();
 
 		if (elements != null && elements.size() != 0 && selectedDbIds != null && selectedDbIds.size() != 0) {
-			dataElementsChange((DataElement) itemList.getValue());
+			NsgDataElement nsgDe = (NsgDataElement) itemList.getValue();
+			DataElement de = null;
+			
+			if (nsgDe != null) {
+				de = nsgDe.getDataElement();
+			}
+			
+			dataElementsChange(de);
 		}
 
 		if (elements == null || elements.size() == 0) {
@@ -322,7 +348,8 @@ public class MainUI extends CustomComponent {
 			@Override
 			public void itemClick(ItemClickEvent event) {
 //				logger.debug("itemclicklistener");
-
+				
+				dataElementButton.setVisible(true);
 				processingButton.setVisible(true);
 			}
 		});
@@ -334,7 +361,7 @@ public class MainUI extends CustomComponent {
 			public void valueChange(ValueChangeEvent event) {
 //				logger.debug("valuechangeevent");
 
-				dataElementsChange((DataElement) itemList.getValue());
+				dataElementsChange(((NsgDataElement) itemList.getValue()).getDataElement());
 			}
 		};
 
@@ -356,25 +383,45 @@ public class MainUI extends CustomComponent {
 
 		values.add(dataElement);
 
+		dataElementButton.setVisible(true);
 		processingButton.setVisible(true);
 
 		if (values == null || values.size() == 0) {
 			hideEditor();
 
+			dataElementButton.setVisible(false);
 			processingButton.setVisible(false);
+		} else if (values.size() == 1 && (mainSplitPanel.getComponentCount() == 1 || mainSplitPanel.getSecondComponent() instanceof DataElementForm)) {
+            setDataElementEditor((DataElement) values.iterator().next());
 		} else if (values.size() != 0 && mainSplitPanel.getComponentCount() == 2) {
 			if (editor == null || !(editor instanceof ProcessingForm)) {
 				setProcessingEditor(values);
 			} else if (app != null && app.getUserDataService() != null) {
 				values = new HashSet<DataElement>();
+				
 				values.addAll((Collection<DataElement>) ((ProcessingForm) editor).getDataElements());
-				values.add(dataElement);
+				
+				Set<DataElement> values_check = new HashSet<DataElement>();
+				
+				values_check.addAll((Collection<DataElement>) ((ProcessingForm) editor).getDataElements());
+				values_check.add(dataElement);
+				
 				List<Application> apps = null;
-				if (values != null && values.size() != 0) {
-					apps = app.getUserDataService().getApplications(((DataElement) values.toArray()[0]));
+				
+				if (values_check != null && values_check.size() != 0) {
+					apps = _getApplicationIntersection(values_check);
+					
+					if (apps == null) {
+						apps = _getApplicationIntersection(values);
+								
+						app.getMainWindow().showNotification("No more matching applications, removing data from list.");
+					} else {
+						values.add(dataElement);
+					}
 				} else {
 					apps = app.getUserDataService().getAllApplications();
 				}
+				
 				((ProcessingForm) editor).setProcessing(values, apps);
 			}
 		} else {
@@ -385,11 +432,38 @@ public class MainUI extends CustomComponent {
 			app.getUserDataService().setDataElementDbIds(itemList.getSelectedDbIds());
 		}
 	}
+	
+	private List<Application> _getApplicationIntersection(Set<DataElement> des) {
+		ArrayList<Application> usable_apps = new ArrayList<Application>();
+		
+		for (DataElement de : des) {
+			List<Application> these_apps = app.getUserDataService().getApplications(de);
+			
+			if (these_apps.size() == 0) {
+				return null;
+			}
+			
+			if (usable_apps.size() == 0) {
+				usable_apps.addAll(these_apps);
+				
+				continue;
+			}
+			
+			these_apps.retainAll(usable_apps);
+			
+			if (these_apps.size() == 0) {
+				return null;
+			}
+		}
+		
+		return usable_apps;
+	}
 
 	public void setProccessingItemList() {
 		Map<String, String> fields = fieldService.getFieldHeaders(Processing.class.getName());
 		setSearchSelect(fields);
 
+		dataElementButton.setVisible(false);
 		processingButton.setVisible(false);
 
 		// last selected
@@ -436,6 +510,20 @@ public class MainUI extends CustomComponent {
 
 		itemList.addListener(itemListChangeListner);
 	}
+	
+	private void setDataElementEditor(DataElement dataElement) {
+        DataElementForm def = new DataElementForm(app.getFieldService());
+        
+        if (dataElement != null) {
+            final List<NsgProperty> metaData = app.getUserDataService().getMetaData(dataElement);
+            
+            if (metaData != null) {
+                def.setDataElement(dataElement, metaData);
+                
+                setEditor(def);
+            }
+        }
+    }
 
 	private void setProcessingEditor(Set<DataElement> dataElements) {
 //		logger.debug("in setprocessingeditor");
@@ -734,6 +822,16 @@ public class MainUI extends CustomComponent {
 		pagePanel.setWidth("-1px");
 		pagePanel.setHeight("-1px");
 		pagePanel.setSpacing(true);
+		
+		// dataElementButton
+        dataElementButton = new NativeButton();
+        dataElementButton.setCaption("view");
+        dataElementButton.setImmediate(true);
+        dataElementButton.setWidth("-1px");
+        dataElementButton.setHeight("-1px");
+        pagePanel.addComponent(dataElementButton);
+        pagePanel.setComponentAlignment(dataElementButton, new Alignment(34));
+        dataElementButton.setVisible(false);
 
 		// processingButton
 		processingButton = new NativeButton();
