@@ -33,7 +33,10 @@ public class NsgDataElement {
 	public NsgDataElement(DataElement de) {
 		this.de = de;
 		this.dbId = de.getDbId();
-		this.date = new SimpleDateFormat("dd/MM/yyyy").format(de.getDate());
+		this.date = "";
+		if (de.getDate() != null) {
+			this.date = new SimpleDateFormat("dd/MM/yyyy").format(de.getDate());
+		}
 		this.type = de.getType();
 		this.format = de.getFormat();
 		this.subject = de.getValueByName("xnat_subject_label");

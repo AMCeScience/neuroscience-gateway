@@ -230,16 +230,14 @@ public class UserDataService {
             return nsgDataElements;
         }
 
-        try {
-            dataElements = persistenceManager.get.project(projectDbId).getDataElements();
-            
-            for(DataElement element : dataElements) {
-            	if (element.getExisting()) {
-            		nsgDataElements.add(new NsgDataElement(element));
-            	}
-            }
-        } catch (Exception e) {
-            logger.error(e.getMessage());
+        dataElements = persistenceManager.get.project(projectDbId).getDataElements();
+        
+        for(DataElement element : dataElements) {
+        	if (element.getExisting()) {
+        		NsgDataElement el = new NsgDataElement(element);
+        		
+        		nsgDataElements.add(el);
+        	}
         }
 
         return nsgDataElements;
@@ -685,7 +683,7 @@ public class UserDataService {
     		dynamicStr += "\ttxts[" + nlinks + "] = \"" + data.getName() + "\"; \n";
     		nlinks++;
 
-    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("xnat_subject_id") + "');\n";
+    		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Subject ID: " + data.getValueByName("xnat_subject_label") + "');\n";
     		dist +=12;
     		body = body + "\t\tdrawText2(ctx, " + x + ", " + (y+dist) + ",'" + txtColorE + "', 'Scan ID:     " + data.getValueByName("xnat_scan_id") + "');\n";
     		dist +=24;
@@ -836,7 +834,7 @@ public class UserDataService {
 	    		if (xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()))) {
 	    			Project project = persistenceManager.get.project(projectDbId);
 	    			
-	    			HashMap<String, String> rawData = xnat.getXnatMetadata(project.getName(), dataElement.getURI());
+	    			HashMap<String, String> rawData = xnat.getXnatMetadata(project.getValueByName("xnat_project_id"), dataElement.getURI());
 	    			
 	    			Iterator<Entry<String, String>> rawResult = rawData.entrySet().iterator();
 	    			

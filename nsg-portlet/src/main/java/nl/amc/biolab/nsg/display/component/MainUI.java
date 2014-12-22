@@ -195,11 +195,7 @@ public class MainUI extends CustomComponent {
 					return;
 				}
 
-				Set<DataElement> des = new HashSet<DataElement>();
-
-				des.add(((NsgDataElement) itemList.getValue()).getDataElement());
-
-				setProcessingEditor(des);
+				dataElementsChange(((NsgDataElement) itemList.getValue()).getDataElement(), true);
 			}
 		});
 	}
@@ -315,7 +311,7 @@ public class MainUI extends CustomComponent {
 		setSearchSelect(fields);
 		
 		List<NsgDataElement> elements = new ArrayList<NsgDataElement>(app.getUserDataService().getProjectData(projectId));
-
+		
 		// last selected
 		Set<Long> selectedDbIds = app.getUserDataService().getDataElementDbIds();
 
@@ -334,7 +330,7 @@ public class MainUI extends CustomComponent {
 				de = nsgDe.getDataElement();
 			}
 			
-			dataElementsChange(de);
+			dataElementsChange(de, false);
 		}
 
 		if (elements == null || elements.size() == 0) {
@@ -361,7 +357,7 @@ public class MainUI extends CustomComponent {
 			public void valueChange(ValueChangeEvent event) {
 //				logger.debug("valuechangeevent");
 
-				dataElementsChange(((NsgDataElement) itemList.getValue()).getDataElement());
+				dataElementsChange(((NsgDataElement) itemList.getValue()).getDataElement(), false);
 			}
 		};
 
@@ -376,7 +372,7 @@ public class MainUI extends CustomComponent {
 	 * @param changed
 	 *            values
 	 */
-	private void dataElementsChange(DataElement dataElement) {
+	private void dataElementsChange(DataElement dataElement, boolean use_data_btn) {
 //		logger.debug("in dataelementschange");
 
 		Set<DataElement> values = new HashSet<DataElement>();
@@ -385,41 +381,82 @@ public class MainUI extends CustomComponent {
 
 		dataElementButton.setVisible(true);
 		processingButton.setVisible(true);
-
+		
 		if (values == null || values.size() == 0) {
 			hideEditor();
 
 			dataElementButton.setVisible(false);
 			processingButton.setVisible(false);
-		} else if (values.size() == 1 && (mainSplitPanel.getComponentCount() == 1 || mainSplitPanel.getSecondComponent() instanceof DataElementForm)) {
+		} else if (values.size() == 1 && !use_data_btn && (mainSplitPanel.getComponentCount() == 1 || mainSplitPanel.getSecondComponent() instanceof DataElementForm)) {
+			// This is the first selected dataElement
+			// There is only one panel OR the second panel is the dataElementForm
+			
             setDataElementEditor((DataElement) values.iterator().next());
 		} else if (values.size() != 0 && mainSplitPanel.getComponentCount() == 2) {
+			// For any size of values
+			// There are two panels
+			
+			// If editor is null or editor is not processingForm
 			if (editor == null || !(editor instanceof ProcessingForm)) {
+				// Get intersection of available applications for selected values
+				List<Application> check_apps = _getApplicationIntersection(values);
+				
+				System.out.println(check_apps);
+				
+				// If the application list is empty
+				if (check_apps == null) {
+					// If there is one dataElement selected
+					if (values.size() == 1) {
+						// The dataElement has no applications bound to it so return that error
+						app.getMainWindow().showNotification("This data item has no applications assigned to it.");
+						
+						return;
+					}
+				}
+				
+				// Create the processingEditor
 				setProcessingEditor(values);
 			} else if (app != null && app.getUserDataService() != null) {
+				// Create list with old dataElements
 				values = new HashSet<DataElement>();
 				
 				values.addAll((Collection<DataElement>) ((ProcessingForm) editor).getDataElements());
 				
+				// Create list with new dataElement added to it
 				Set<DataElement> values_check = new HashSet<DataElement>();
 				
 				values_check.addAll((Collection<DataElement>) ((ProcessingForm) editor).getDataElements());
 				values_check.add(dataElement);
 				
-				List<Application> apps = null;
+				// Set all apps as the default
+				List<Application> apps = app.getUserDataService().getAllApplications();
 				
+				// If at least one dataElement is selected, check applications
 				if (values_check != null && values_check.size() != 0) {
-					apps = _getApplicationIntersection(values_check);
+					// Get intersection of applications with old and new dataElements
+					List<Application> check_apps = _getApplicationIntersection(values_check);
 					
-					if (apps == null) {
-						apps = _getApplicationIntersection(values);
-								
-						app.getMainWindow().showNotification("No more matching applications, removing data from list.");
+					// If this list is null the new dataElement resulted in an empty intersection
+					if (check_apps == null) {
+						// If the length of the values_check list is 1 this was the first dataElement
+						if (values_check.size() == 1) {
+							// Also this dataElement did not have any applications bound to it so return that error
+							app.getMainWindow().showNotification("This data item has no applications assigned to it.");
+						} else {
+							// There were more dataElements in the list
+							// We return the list of applications for the old dataElements
+							apps = _getApplicationIntersection(values);
+							
+							app.getMainWindow().showNotification("No more matching applications, removing data from list.");
+						}
 					} else {
+						// The check_apps was not null which means that there is at least one application in the intersection
+						// Add the dataElement to the list
 						values.add(dataElement);
+						
+						// Return the apps
+						apps = _getApplicationIntersection(values);
 					}
-				} else {
-					apps = app.getUserDataService().getAllApplications();
 				}
 				
 				((ProcessingForm) editor).setProcessing(values, apps);

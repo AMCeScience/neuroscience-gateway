@@ -118,7 +118,7 @@ public class ProcessingService {
 	public JSONArray prepareSubmission(Processing processing, Set<Long> dataElementIds) {
 		JSONArray submits = new JSONArray();
 
-		int appType = processing.getApplication().getType();
+		String appType = processing.getApplication().getName();
 		
 		for (Long dbId : dataElementIds) {
 			JSONArray wrapper = new JSONArray();
@@ -126,7 +126,7 @@ public class ProcessingService {
 			DataElement de = userDataService.getDataElement(dbId);
 
 			// find matching inputs -> for tracula
-			if (appType == 2) {   
+			if (appType.equals("Tracula")) {   
 	            String sessionUri = _getSessionUri(de.getURI());
 	            
 	            logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
@@ -189,7 +189,7 @@ public class ProcessingService {
 		String xnatID = userDataService.getProject().getValueByName("xnat_project_id");
 		String baseDataType = dataElement.getType();
 		// unique id
-		String subject = dataElement.getValueByName("xnat_subject_id");
+		String subject = dataElement.getValueByName("xnat_subject_label");
 		String scanID = dataElement.getValueByName("xnat_scan_id");
 		String applicationName = processing.getApplication().getInternalName();
 		String reconstructionType = outputPort.getDataFormat().replace(" ", "_");
@@ -206,7 +206,7 @@ public class ProcessingService {
 		}
 		
 		returnURI = "base_string " + reconString.replace(" ", "_") + " xnat_project_id " + xnatID.replace(" ", "_") 
-				+ " base_data_type " + baseDataType.replace(" ", "_") + " xnat_subject_id " + subject.replace(" ", "_") 
+				+ " base_data_type " + baseDataType.replace(" ", "_") + " xnat_subject_label " + subject.replace(" ", "_") 
 				+ " xnat_scan_id " + scanID.replace(" ", "_") + " application_name " + applicationName.replace(" ", "_")
 				+ " reconstruction_type " + reconstructionType.replace(" ", "_");
 

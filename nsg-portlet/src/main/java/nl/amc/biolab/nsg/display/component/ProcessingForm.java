@@ -239,7 +239,6 @@ public class ProcessingForm extends Form {
 			private static final long serialVersionUID = 1906358615316029946L;
 
 			public void buttonClick(ClickEvent event) {
-				System.out.println("check");
 				System.out.println(app.getValue());
 				
 				Set<Long> inputDbIds = new HashSet<Long>();
@@ -254,19 +253,9 @@ public class ProcessingForm extends Form {
 				
 				form.commit();
 				
-				System.out.println("Before app select.");
-				
 				processing.setApplication((Application) app.getValue());
 				
-				System.out.println(app.getValue());
-				
-				System.out.println("After app select.");
-				
 				startButton.setData(processing);
-				
-				System.out.println(processing.getApplication());
-				
-				System.out.println("After set data");
 				
 				form.fireEvent(new Event(startButton));
 			}
