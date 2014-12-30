@@ -142,7 +142,7 @@ public class ProcessingService {
 			}
 			
 			int inputPortId = processing.getApplication().getVisibleInputPorts().iterator().next().getPortNumber();
-			IOPort outputPort = processing.getApplication().getOutputPorts().iterator().next();
+			IOPort outputPort = processing.getApplication().getVisibleOutputPorts().iterator().next();
 			HashMap<String, String> outputData = _getOutputString(de, processing, outputPort);
 			
 			// Input
