@@ -21,12 +21,12 @@
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>config-manager</artifactId>
-						<version>1.0.10-SNAPSHOT</version>
+						<version>1.0.12-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>nsgdm-api</artifactId>
-						<version>2.4.2-SNAPSHOT</version>
+						<version>2.4.4-SNAPSHOT</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>

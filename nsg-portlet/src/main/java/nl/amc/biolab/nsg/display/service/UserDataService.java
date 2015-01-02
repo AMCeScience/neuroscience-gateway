@@ -64,9 +64,8 @@ import com.liferay.portal.service.RoleLocalServiceUtil;
  *
  */
 public class UserDataService {
-
-    private static final long XNAT_DATASOURCE_ID = 1L;
-
+	private Long xnat_resource_id;
+	
     Logger logger = Logger.getLogger(UserDataService.class);
 
     private PersistenceManager persistenceManager = new PersistenceManager();
@@ -82,6 +81,12 @@ public class UserDataService {
 
     protected UserDataService() {
         logger.setLevel(Level.DEBUG);
+        
+        try {
+			xnat_resource_id = ConfigurationManager.read.getLongItem("nsg", "used_xnat_resource");
+		} catch (ReaderException e) {
+			xnat_resource_id = 8L;
+		}
     }
 
     /**
@@ -427,7 +432,8 @@ public class UserDataService {
      * @throws SynchXNAT checkUser RuntimeException
      */
     public boolean xnatLogin() {
-    	Long resourceId = 1L;
+		Resource xnat_resource = persistenceManager.get.resource(xnat_resource_id);
+		
 		User user = persistenceManager.get.user(liferayId.toString());
 		boolean return_val = false;
 
@@ -437,29 +443,25 @@ public class UserDataService {
 			throw new RuntimeException("No User.");
 		}
 
-		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), resourceId);
+		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), xnat_resource_id);
 		
 		if (userAuth == null) {
-			logger.error("No Credentials are set for user'" + liferayId + "' on resource " + resourceId);
+			logger.error("No Credentials are set for user'" + liferayId + "' on resource " + xnat_resource_id);
 
 			throw new RuntimeException("Wrong Password.");
 		}
 
 		if (userAuth.getAuthentication() == null) {
-			logger.error("Password is not set for user'" + liferayId + "' on resource " + resourceId);
+			logger.error("Password is not set for user'" + liferayId + "' on resource " + xnat_resource_id);
 
 			throw new RuntimeException("No Password.");
 		}
 		
-		try {
-			XnatClient xnat = new XnatClient(ConfigurationManager.read.getStringItem("xnat", "xnat_host"));
-			
-			BlobHandler handler = new BlobHandler();
-			
-			return_val = xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()));
-		} catch (ReaderException e) {
-			e.printStackTrace();
-		}
+		XnatClient xnat = new XnatClient(xnat_resource.getBaseURI());
+		
+		BlobHandler handler = new BlobHandler();
+		
+		return_val = xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()));
 		
 		if (return_val == false) {
 			throw new RuntimeException("Wrong Password.");
@@ -469,7 +471,8 @@ public class UserDataService {
     }
     
     public boolean checkAuthentication(User user) {
-        return persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), XNAT_DATASOURCE_ID).getAuthentication() != null;
+        return persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), xnat_resource_id) != null 
+        		&& persistenceManager.get.userAuthenticationByResourceId(user.getDbId(), xnat_resource_id).getAuthentication() != null;
     }
 
     /**
@@ -481,8 +484,9 @@ public class UserDataService {
         if (liferayId == null) {
             return;
         }
+        
         try {
-            UserAuthentication auth = persistenceManager.get.userAuthenticationByResourceId(userId, XNAT_DATASOURCE_ID);
+            UserAuthentication auth = persistenceManager.get.userAuthenticationByResourceId(userId, xnat_resource_id);
             
             BlobHandler handler = new BlobHandler();
             
@@ -512,7 +516,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("?format=zip"));
             }
             
-            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn;
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -535,7 +539,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+11);
             }
             
-            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn;
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -558,7 +562,7 @@ public class UserDataService {
             	toReturn = toReturn.substring(0, de.getURI().indexOf("/out/files/")+10);
             }
             
-            return toReturn.replace(ConfigurationManager.read.getStringItem("xnat", "xnat_tunnel_path"), ConfigurationManager.read.getStringItem("xnat", "xnat_absolute_path"));
+            return toReturn;
         } catch (Exception e) {
             logger.error(e.getMessage());
         } 
@@ -821,33 +825,31 @@ public class UserDataService {
     }
     
     public List<NsgProperty> getMetaData(DataElement dataElement) {
+    	Resource xnat_resource = persistenceManager.get.resource(xnat_resource_id);
+    	
         List<NsgProperty> metaData = new ArrayList<NsgProperty>();
-        
-		try {
-			XnatClient xnat = new XnatClient(ConfigurationManager.read.getStringItem("xnat", "xnat_host"));
-			
-			if (xnat.checkAvailability()) {
-	    		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(getUser().getDbId(), 1L);
-	    		
-	    		BlobHandler handler = new BlobHandler();
-	    		
-	    		if (xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()))) {
-	    			Project project = persistenceManager.get.project(projectDbId);
-	    			
-	    			HashMap<String, String> rawData = xnat.getXnatMetadata(project.getValueByName("xnat_project_id"), dataElement.getURI());
-	    			
-	    			Iterator<Entry<String, String>> rawResult = rawData.entrySet().iterator();
-	    			
-	    			while (rawResult.hasNext()) {
-						Map.Entry<String, String> pair = (Map.Entry<String, String>) rawResult.next();
-	    				
-	    				metaData.add(new NsgProperty(pair.getKey(), pair.getValue()));
-	    			}
-	    		}
-	    	}
-		} catch (ReaderException e) {
-			e.printStackTrace();
-		}
+    
+		XnatClient xnat = new XnatClient(xnat_resource.getBaseURI());
+		
+		if (xnat.checkAvailability()) {
+    		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(getUser().getDbId(), 1L);
+    		
+    		BlobHandler handler = new BlobHandler();
+    		
+    		if (xnat.authenticateUser(userAuth.getUserLogin(), handler.decryptString(userAuth.getAuthentication()))) {
+    			Project project = persistenceManager.get.project(projectDbId);
+    			
+    			HashMap<String, String> rawData = xnat.getXnatMetadata(project.getValueByName("xnat_project_id"), dataElement.getURI());
+    			
+    			Iterator<Entry<String, String>> rawResult = rawData.entrySet().iterator();
+    			
+    			while (rawResult.hasNext()) {
+					Map.Entry<String, String> pair = (Map.Entry<String, String>) rawResult.next();
+    				
+    				metaData.add(new NsgProperty(pair.getKey(), pair.getValue()));
+    			}
+    		}
+    	}
 
         return metaData;
 

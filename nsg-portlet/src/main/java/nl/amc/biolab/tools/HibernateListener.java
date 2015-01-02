@@ -3,12 +3,15 @@ package nl.amc.biolab.tools;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
+import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.manager.HibernateUtil;
 
 public class HibernateListener implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
     	try {
+    		new ConfigurationManager();
+    		
     		System.out.println("############################################# Starting session factory");
     		
     		HibernateUtil.getSessionFactory();
