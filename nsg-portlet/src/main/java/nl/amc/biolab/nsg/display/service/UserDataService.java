@@ -437,10 +437,10 @@ public class UserDataService {
     			
     			boolean matched_inputs=true; // assume inputs exists unless proven otherwise
     			for (IOPort trac_port : app.getInputPorts()) {
-    				if (!port.isVisible()) {    // ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
+    				if (!trac_port.isVisible()) {    // ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
     					DataElement el = getMatchingInput(sessionUri, trac_port.getDataFormat());
-    					if(el == null || !el.getExisting()) {
-    						logger.debug("No matching input found for port ID " + port.getDbId() + "(#" + port.getPortNumber() + " " + port.getPortName());
+    					if(el == null) { // || !el.getExisting()) { // NOTE: selection for Existing done in getMatchingInput 
+    						logger.debug("No matching input found for port ID " + trac_port.getDbId() + "(#" + trac_port.getPortNumber() + " " + trac_port.getPortName());
     						matched_inputs=false; // not all inputs can be matched!
     					}
     				}
@@ -627,9 +627,8 @@ public class UserDataService {
     @SuppressWarnings("unchecked")
 	public DataElement getMatchingInput(String sessionUri, String requestedType) {
         try {
-        	List<DataElement> results = persistenceManager.query.executeQuery("from DataElement where URI LIKE '%"+sessionUri+"%' AND Type = '"+requestedType+"'");
-
-            return results.iterator().next(); // WARNING: can be null if result set is empty; i.e. no matched input!
+        	List<DataElement> results = persistenceManager.query.executeQuery("from DataElement where URI LIKE '%"+sessionUri+"%' AND Type = '"+requestedType+"' AND Existing=1"); // TODO: change to select any Recon Freesurfer, regardless of version?
+            return results.iterator().next(); // WARNING: next() can return null if result set is empty; i.e. no matched input!
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
