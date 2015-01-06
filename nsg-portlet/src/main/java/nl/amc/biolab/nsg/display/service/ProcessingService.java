@@ -118,7 +118,7 @@ public class ProcessingService {
 	public JSONArray prepareSubmission(Processing processing, Set<Long> dataElementIds) {
 		JSONArray submits = new JSONArray();
 
-		String appType = processing.getApplication().getName();
+		String appName = processing.getApplication().getName();
 		
 		for (Long dbId : dataElementIds) {
 			JSONArray wrapper = new JSONArray();
@@ -126,7 +126,7 @@ public class ProcessingService {
 			DataElement de = userDataService.getDataElement(dbId);
 
 			// find matching inputs -> for tracula
-			if (appType.equals("Tracula")) {   
+			if (appName.startsWith("Tracula")) {    // or appName.contains("Tracula"); also, ignore case? Prefer regex?
 	            String sessionUri = _getSessionUri(de.getURI());
 	            
 	            logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
@@ -135,7 +135,7 @@ public class ProcessingService {
 	                if (!port.isVisible()) {    
 	                	// ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
 	                	DataElement el = userDataService.getMatchingInput(sessionUri, port.getDataFormat());
-	                	
+	                	// NOTE: data element may be null if no match is found; although check is already performed when user selects a BedpostX reconstruction
 	                    wrapper.add(_createSubmissionMap(port.getPortNumber(), el.getName(), el.getURI()));
 	                }
 	            }

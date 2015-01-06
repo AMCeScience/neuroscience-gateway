@@ -408,10 +408,49 @@ public class UserDataService {
         return false;
     }
     
+    // NOTE: copy from ProcessingService.java:_getSessionUri()
+	private String _getSessionUri(String dataElementUri) {
+        final String sessionDescriptor = "/experiments/";
+        
+        int sessionIndex = dataElementUri.indexOf(sessionDescriptor) + sessionDescriptor.length();
+        int endIndex = dataElementUri.indexOf("/", sessionIndex);
+        
+        if (sessionIndex == -1 || endIndex == -1) {
+        	throw new IllegalArgumentException("No session information could be found in the provided URI.");
+        }
+        
+        return dataElementUri.substring(0, endIndex);
+	}
+	
     public List<Application> getApplications(DataElement dataElement) {
     	List<Application> apps = new ArrayList<Application>();
     	
     	for (IOPort port : dataElement.getUsableIOPorts()) {
+    		Application app = port.getApplication();
+    		String appName=app.getName();
+    		
+    		// NOTE: adapted from ProcessingService.java:prepareSubmission()
+    		// find matching inputs -> for tracula
+    		if (appName.startsWith("Tracula")) {    // or appName.contains("Tracula"); also, ignore case? Prefer regex?
+    			String sessionUri =  _getSessionUri(dataElement.getURI());
+    			logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
+    			
+    			boolean matched_inputs=true; // assume inputs exists unless proven otherwise
+    			for (IOPort trac_port : app.getInputPorts()) {
+    				if (!port.isVisible()) {    // ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
+    					DataElement el = getMatchingInput(sessionUri, trac_port.getDataFormat());
+    					if(el == null || !el.getExisting()) {
+    						logger.debug("No matching input found for port ID " + port.getDbId() + "(#" + port.getPortNumber() + " " + port.getPortName());
+    						matched_inputs=false; // not all inputs can be matched!
+    					}
+    				}
+    			}
+    			if(!matched_inputs) {
+    				logger.debug("Tracula application will be skipped as usable application because of missing input data elements");
+    				logger.debug("NOTE: fails silently for the user; i.e. reporting no matchinig application notifications");
+    				continue; // skip Tracula application; TODO: show notification to user?
+    			}
+    		}
     		apps.add(port.getApplication());
     	}
     	
@@ -590,7 +629,7 @@ public class UserDataService {
         try {
         	List<DataElement> results = persistenceManager.query.executeQuery("from DataElement where URI LIKE '%"+sessionUri+"%' AND Type = '"+requestedType+"'");
 
-            return results.iterator().next();
+            return results.iterator().next(); // WARNING: can be null if result set is empty; i.e. no matched input!
         } catch (Exception e) {
             logger.error(e.getMessage());
         }

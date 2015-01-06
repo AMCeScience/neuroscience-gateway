@@ -447,7 +447,7 @@ public class MainUI extends CustomComponent {
 							// We return the list of applications for the old dataElements
 							apps = _getApplicationIntersection(values);
 							
-							app.getMainWindow().showNotification("No more matching applications, removing data from list.");
+							app.getMainWindow().showNotification("No more matching applications, removing data from list."); // NOTE: may also be trigger when not all input ports of the Tracula application can be matched!
 						}
 					} else {
 						// The check_apps was not null which means that there is at least one application in the intersection
