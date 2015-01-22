@@ -10,7 +10,7 @@ public class HibernateListener implements ServletContextListener {
 
     public void contextInitialized(ServletContextEvent event) {
     	try {
-    		new ConfigurationManager();
+    		ConfigurationManager.init();
     		
     		System.out.println("############################################# Starting session factory");
     		

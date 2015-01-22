@@ -21,7 +21,7 @@
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
 						<artifactId>config-manager</artifactId>
-						<version>1.0.12-SNAPSHOT</version>
+						<version>1.1.0-RELEASE</version>
 				</dependency>
 				<dependency>
 						<groupId>nl.amc.biolab</groupId>
