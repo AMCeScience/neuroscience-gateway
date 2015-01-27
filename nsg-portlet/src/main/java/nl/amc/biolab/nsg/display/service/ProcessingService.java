@@ -18,8 +18,10 @@
  */
 package nl.amc.biolab.nsg.display.service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.objects.DataElement;
@@ -116,13 +118,15 @@ public class ProcessingService {
 
 	@SuppressWarnings("unchecked")
 	public JSONArray prepareSubmission(Processing processing, Set<Long> dataElementIds) {
-		JSONArray submits = new JSONArray();
+		JSONArray submission = new JSONArray();
 
 		String appName = processing.getApplication().getName();
 		
 		for (Long dbId : dataElementIds) {
-			JSONArray wrapper = new JSONArray();
-
+			JSONObject submissionIO = new JSONObject();
+			JSONArray inputs = new JSONArray();
+			JSONArray outputs = new JSONArray();
+			
 			DataElement de = userDataService.getDataElement(dbId);
 
 			// find matching inputs -> for tracula
@@ -136,7 +140,7 @@ public class ProcessingService {
 	                	// ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
 	                	DataElement el = userDataService.getMatchingInput(sessionUri, port.getDataFormat());
 	                	// NOTE: data element may be null if no match is found; although check is already performed when user selects a BedpostX reconstruction
-	                    wrapper.add(_createSubmissionMap(port.getPortNumber(), el.getName(), el.getURI()));
+	                    inputs.add(_createSubmissionMap(port.getPortNumber(), el.getName(), el.getURI(), null));
 	                }
 	            }
 			}
@@ -146,14 +150,17 @@ public class ProcessingService {
 			HashMap<String, String> outputData = _getOutputString(de, processing, outputPort);
 			
 			// Input
-			wrapper.add(_createSubmissionMap(inputPortId, de.getName(), de.getURI()));
+			inputs.add(_createSubmissionMap(inputPortId, de.getName(), de.getURI(), null));
 			// Output
-			wrapper.add(_createSubmissionMap(outputPort.getPortNumber(), outputData.get("name"), outputData.get("uri")));
-
-			submits.add(wrapper);
+			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputData.get("name"), outputData.get("uri"), null));
+			
+			submissionIO.put("inputs", inputs);
+			submissionIO.put("outputs", outputs);
+			
+			submission.add(submissionIO);
 		}
 		
-		return submits;
+		return submission;
 	}
 	
 	private String _getSessionUri(String dataElementUri) {
@@ -169,12 +176,27 @@ public class ProcessingService {
         return dataElementUri.substring(0, endIndex);
 	}
 
-	private HashMap<String, Object> _createSubmissionMap(int portId, String name, String dataUri) {
+	@SuppressWarnings("unchecked")
+	private HashMap<String, Object> _createSubmissionMap(int portId, String name, String dataUri, HashMap<String, Object> keyValues) {
 		HashMap<String, Object> submit_map = new HashMap<String, Object>();
+		
+		JSONObject keyValueObj = new JSONObject();
 
+		if (keyValues != null) {
+			for (Entry<String, Object> entry : keyValues.entrySet()) {
+				keyValueObj.put(entry.getKey(), entry.getValue());
+			}
+		}
+		
 		submit_map.put("portId", portId);
 		submit_map.put("name", name);
 		submit_map.put("data", dataUri);
+		submit_map.put("format", dataUri.substring(dataUri.lastIndexOf(".") + 1, dataUri.length()));
+		submit_map.put("size", 100);
+		submit_map.put("type", "filler");
+		submit_map.put("date", new Date());
+		submit_map.put("resourceId", 1L);
+		submit_map.put("keyValuePairs", keyValueObj);
 
 		return submit_map;
 	}

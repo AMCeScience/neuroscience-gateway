@@ -210,12 +210,30 @@ public class UserDataService {
         try {
             projects = persistenceManager.get.projects();
             
+            Long used_resource = ConfigurationManager.read.getLongItem("nsg", "used_xnat_resource");
+            
             for (Project project : projects) {
-            	Resource resource = persistenceManager.get.resource(Long.parseLong(project.getValueByName("resource_id")));
+            	System.out.println("this id: " + project.getValueByName("resource_id"));
+            	
+            	Long project_resource_id = null;
             	String resource_name = "";
             	
-            	if (resource != null) {
-            		resource_name = resource.getName();
+            	if (project.getValueByName("resource_id") != null) {
+            		project_resource_id = Long.parseLong(project.getValueByName("resource_id"));
+            		
+            		if (project_resource_id != null && project_resource_id == used_resource) {
+            			if (project_resource_id != null) {
+        					Resource resource = persistenceManager.get.resource(project_resource_id);
+        					
+        					if (resource != null) {
+        	            		resource_name = resource.getName();
+        	            	}
+        				}
+            		} else {
+            			// This project either is on the wrong resource or has no resource
+            			
+            			continue;
+            		}
             	}
             	
             	nsg_projects.add(new NsgProject(project, resource_name));
@@ -424,10 +442,28 @@ public class UserDataService {
 	
     public List<Application> getApplications(DataElement dataElement) {
     	List<Application> apps = new ArrayList<Application>();
+    	List<Application> userApps = persistenceManager.get.applications();
     	
     	for (IOPort port : dataElement.getUsableIOPorts()) {
+    		boolean may_use = false;
+    		
     		Application app = port.getApplication();
-    		String appName=app.getName();
+    		
+    		// Check if this user may access this application
+    		for (Application userApp : userApps) {
+    			if (userApp.getDbId() == app.getDbId()) {
+    				may_use = true;
+    				
+    				break;
+    			}
+    		}
+    		
+    		// If not skip this IOPort
+    		if (!may_use) {
+    			continue;
+    		}
+    		
+    		String appName = app.getName();
     		
     		// NOTE: adapted from ProcessingService.java:prepareSubmission()
     		// find matching inputs -> for tracula
@@ -435,22 +471,26 @@ public class UserDataService {
     			String sessionUri =  _getSessionUri(dataElement.getURI());
     			logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
     			
-    			boolean matched_inputs=true; // assume inputs exists unless proven otherwise
+    			boolean matched_inputs = true; // assume inputs exists unless proven otherwise
+    			
     			for (IOPort trac_port : app.getInputPorts()) {
     				if (!trac_port.isVisible()) {    // ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
     					DataElement el = getMatchingInput(sessionUri, trac_port.getDataFormat());
-    					if(el == null) { // || !el.getExisting()) { // NOTE: selection for Existing done in getMatchingInput 
+    					
+    					if(el == null) { 
     						logger.debug("No matching input found for port ID " + trac_port.getDbId() + "(#" + trac_port.getPortNumber() + " " + trac_port.getPortName());
-    						matched_inputs=false; // not all inputs can be matched!
+    						matched_inputs = false; // not all inputs can be matched!
     					}
     				}
     			}
+    			
     			if(!matched_inputs) {
     				logger.debug("Tracula application will be skipped as usable application because of missing input data elements");
     				logger.debug("NOTE: fails silently for the user; i.e. reporting no matchinig application notifications");
     				continue; // skip Tracula application; TODO: show notification to user?
     			}
     		}
+    		
     		apps.add(port.getApplication());
     	}
     	

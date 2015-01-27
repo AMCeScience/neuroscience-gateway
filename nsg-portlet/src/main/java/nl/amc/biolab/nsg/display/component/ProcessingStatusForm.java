@@ -219,6 +219,10 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                         download = new Label("No output available", Label.CONTENT_XHTML);
                     } else {
                         for (SubmissionIO submissionIOoutput : outputs) {
+                        	if (!submissionIOoutput.getDataElement().getExisting()) {
+                        		continue;
+                        	}
+                        	
                             final DataElement outputElement = submissionIOoutput.getDataElement();
                             
                             downloadValue.append("<a href='").append(userDataService.getDownloadURI(outputElement.getDbId())).append("' target='_blank'>download output</a><br />");

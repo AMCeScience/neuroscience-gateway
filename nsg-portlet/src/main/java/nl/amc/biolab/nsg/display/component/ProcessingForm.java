@@ -94,7 +94,7 @@ public class ProcessingForm extends Form {
 		app.setWidth("79%");
 		app.setHeight("-1px");
 		app.setRequired(true);
-		app.setRequiredError("Application is required 321");
+		app.setRequiredError("Application is required");
 		app.setCaption("Application");
 		fields.put("application", app);
 
