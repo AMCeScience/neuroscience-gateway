@@ -559,7 +559,7 @@ public class UserDataService {
      *
      * @param password
      */
-    public void setPassword(String password) {
+    public void setPassword(String username, String password) {
         if (liferayId == null) {
             return;
         }
@@ -569,9 +569,15 @@ public class UserDataService {
             
             BlobHandler handler = new BlobHandler();
             
-            auth.setAuthentication(handler.encryptString(password));
-            
-            persistenceManager.update.userAuthentication(auth);
+            if (auth == null) {
+            	auth = persistenceManager.get.userAuthentication(
+            			persistenceManager.insert.userAuthentication(username, handler.encryptString(password), "", persistenceManager.get.user(userId), persistenceManager.get.resource(xnat_resource_id))
+        			);
+            } else {
+            	auth.setAuthentication(handler.encryptString(password));
+            	
+            	persistenceManager.update.userAuthentication(auth);
+            }
         } catch (Exception e) {
             logger.error("setPassword failed");
             e.printStackTrace();
@@ -910,7 +916,7 @@ public class UserDataService {
 		XnatClient xnat = new XnatClient(xnat_resource.getBaseURI());
 		
 		if (xnat.checkAvailability()) {
-    		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(getUser().getDbId(), 1L);
+    		UserAuthentication userAuth = persistenceManager.get.userAuthenticationByResourceId(getUser().getDbId(), xnat_resource_id);
     		
     		BlobHandler handler = new BlobHandler();
     		

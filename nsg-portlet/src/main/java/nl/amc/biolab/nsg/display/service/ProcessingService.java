@@ -18,15 +18,18 @@
  */
 package nl.amc.biolab.nsg.display.service;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
-import java.util.Map.Entry;
 
+import nl.amc.biolab.config.exceptions.ReaderException;
 import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.IOPort;
 import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Value;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
 
 import org.apache.log4j.Level;
@@ -140,19 +143,26 @@ public class ProcessingService {
 	                	// ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
 	                	DataElement el = userDataService.getMatchingInput(sessionUri, port.getDataFormat());
 	                	// NOTE: data element may be null if no match is found; although check is already performed when user selects a BedpostX reconstruction
-	                    inputs.add(_createSubmissionMap(port.getPortNumber(), el.getName(), el.getURI(), null));
+	                    inputs.add(_createSubmissionMap(port.getPortNumber(), el.getResource().getDbId(), el.getName(), el.getURI(), el.getFormat(), el.getType(), el.getSize(), el.getValues()));
 	                }
 	            }
 			}
 			
-			int inputPortId = processing.getApplication().getVisibleInputPorts().iterator().next().getPortNumber();
+			int inputPortNumber = processing.getApplication().getVisibleInputPorts().iterator().next().getPortNumber();
 			IOPort outputPort = processing.getApplication().getVisibleOutputPorts().iterator().next();
 			HashMap<String, String> outputData = _getOutputString(de, processing, outputPort);
+			Long outputResource = 1L;
+			
+			try {
+				outputResource = ConfigurationManager.read.getLongItem("nsg", "used_xnat_resource");
+			} catch (ReaderException e) {
+				e.printStackTrace();
+			}
 			
 			// Input
-			inputs.add(_createSubmissionMap(inputPortId, de.getName(), de.getURI(), null));
+			inputs.add(_createSubmissionMap(inputPortNumber, de.getResource().getDbId(), de.getName(), de.getURI(), de.getFormat(), de.getType(), de.getSize(), de.getValues()));
 			// Output
-			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputData.get("name"), outputData.get("uri"), null));
+			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputResource, outputData.get("name"), outputData.get("uri"), outputPort.getDataFormat(), outputPort.getDataType(), null, null));
 			
 			submissionIO.put("inputs", inputs);
 			submissionIO.put("outputs", outputs);
@@ -177,25 +187,29 @@ public class ProcessingService {
 	}
 
 	@SuppressWarnings("unchecked")
-	private HashMap<String, Object> _createSubmissionMap(int portId, String name, String dataUri, HashMap<String, Object> keyValues) {
+	private HashMap<String, Object> _createSubmissionMap(int portNumber, Long resourceId, String name, String dataUri, String format, String type, Integer size, Collection<Value> keyValues) {
 		HashMap<String, Object> submit_map = new HashMap<String, Object>();
 		
 		JSONObject keyValueObj = new JSONObject();
 
 		if (keyValues != null) {
-			for (Entry<String, Object> entry : keyValues.entrySet()) {
-				keyValueObj.put(entry.getKey(), entry.getValue());
+			Iterator<Value> iter = keyValues.iterator();
+			
+			while (iter.hasNext()) {
+				Value val = iter.next();
+				
+				keyValueObj.put(val.getKey().getName(), val.getValue());
 			}
 		}
 		
-		submit_map.put("portId", portId);
+		submit_map.put("portNumber", portNumber);
 		submit_map.put("name", name);
 		submit_map.put("data", dataUri);
-		submit_map.put("format", dataUri.substring(dataUri.lastIndexOf(".") + 1, dataUri.length()));
-		submit_map.put("size", 100);
-		submit_map.put("type", "filler");
+		submit_map.put("format", format);
+		submit_map.put("size", (size != null) ? size : 0);
+		submit_map.put("type", type);
 		submit_map.put("date", new Date());
-		submit_map.put("resourceId", 1L);
+		submit_map.put("resourceId", resourceId);
 		submit_map.put("keyValuePairs", keyValueObj);
 
 		return submit_map;

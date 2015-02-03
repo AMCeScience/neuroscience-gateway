@@ -219,13 +219,11 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                         download = new Label("No output available", Label.CONTENT_XHTML);
                     } else {
                         for (SubmissionIO submissionIOoutput : outputs) {
-                        	if (!submissionIOoutput.getDataElement().getExisting()) {
-                        		continue;
-                        	}
+                        	final DataElement outputElement = submissionIOoutput.getDataElement();
                         	
-                            final DataElement outputElement = submissionIOoutput.getDataElement();
-                            
-                            downloadValue.append("<a href='").append(userDataService.getDownloadURI(outputElement.getDbId())).append("' target='_blank'>download output</a><br />");
+                        	if (submissionIOoutput.getDataElement().getExisting()) {
+                        		downloadValue.append("<a href='").append(userDataService.getDownloadURI(outputElement.getDbId())).append("' target='_blank'>download output</a><br />");
+                        	}
 
                             NativeButton viewHistoryButton = new NativeButton("history");
                             
@@ -305,7 +303,7 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
             logger.info("Error message is " + error.getMessage());
         }
         
-        statusValue.append(getStatus(submissionStatus, error, /*app.isAdminURL() &&*/ userDataService.isNSGAdmin())).append("\n");
+        statusValue.append(getStatus(submissionStatus, error, userDataService.isNSGAdmin())).append("\n");
         
         logger.info(statusValue);
         
@@ -444,11 +442,13 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
 					private static final long serialVersionUID = -5026454769214596711L;
 
 					{
+						List<nl.amc.biolab.datamodel.objects.Error> temp = submissionIO.getSubmission().getErrors();
+						
                         center();
                         setWidth("700px");
                         setHeight("500px");
                         VerticalLayout vl = new VerticalLayout();
-                        vl.addComponent(new Label(processingService.getSubmissionError(submissionIO.getSubmission().getDbId()).getDescription(), Label.CONTENT_PREFORMATTED));
+                        vl.addComponent(new Label(temp.get(temp.size() - 1).getMessage(), Label.CONTENT_PREFORMATTED));
                         addComponent(vl);
                     }
                 });

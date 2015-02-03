@@ -29,6 +29,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 
 /**
  * 
@@ -55,10 +56,12 @@ public class LoginUI extends CustomComponent {
 		
 		setCompositionRoot(layout);
 
+		final TextField name = new TextField("Please enter your XNAT username");
 		final PasswordField xnatPassword = new PasswordField("Please enter your XNAT password");
 		
 		xnatPassword.setRequired(true);
 		
+		form.addField("xnatUsername", name);
 		form.addField("xnatPassword", xnatPassword);
 
 		final Button okButton = new Button("ok");
@@ -70,7 +73,7 @@ public class LoginUI extends CustomComponent {
 			public void buttonClick(ClickEvent event) {
 				User user = null;
 				
-				user = login((String) xnatPassword.getValue());
+				user = login((String) name.getValue(), (String) xnatPassword.getValue());
 				xnatPassword.setValue("");
 				
 				if (user == null) {
@@ -92,7 +95,7 @@ public class LoginUI extends CustomComponent {
 	 * @param password
 	 * @return User object if login ok
 	 */
-	private User login(String password) {
+	private User login(String username, String password) {
 		if (app == null) {
 			return null;
 		}
@@ -104,7 +107,7 @@ public class LoginUI extends CustomComponent {
 		}
 		
 		try {
-			app.getUserDataService().setPassword(password);
+			app.getUserDataService().setPassword(username, password);
 			app.getUserDataService().xnatLogin();
 		} catch (RuntimeException e) {
 			if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
