@@ -19,11 +19,17 @@
 package nl.amc.biolab.nsg.display.component;
 
 import java.lang.reflect.Method;
+import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Project;
+import nl.amc.biolab.datamodel.objects.User;
 
 import org.apache.log4j.Logger;
 
@@ -31,11 +37,6 @@ import com.vaadin.data.Property;
 import com.vaadin.data.util.BeanItemContainer;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Table;
-import java.text.SimpleDateFormat;
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Project;
-import nl.amc.biolab.nsgdm.User;
 
 /**
  * 
@@ -75,25 +76,29 @@ public class ItemList<T> extends Table {
 
 		final BeanItemContainer<T> bic = new BeanItemContainer<T>(clazz);
 		Iterator<String> iter = fields.keySet().iterator();
+		
 		while(iter.hasNext()) {
-			String f = iter.next();
-			if (!f.contains(".")) {
-				addContainerProperty(f, String.class, "");
+			String column_name = iter.next();
+			
+			if (!column_name.contains(".")) {
+				addContainerProperty(column_name, String.class, "");
 			} else {
-				bic.addNestedContainerProperty(f);
-
+				bic.addNestedContainerProperty(column_name);
 			}
-			setColumnHeader(f, fields.get(f));
-            // TODO: See if this gives all columns the same width!
-            setColumnExpandRatio(f, 1);
+			
+			setColumnHeader(column_name, fields.get(column_name));
+            setColumnExpandRatio(column_name, 1);
 		}
         
         setItemDescriptionGenerator(new ItemDescriptionGenerator() {
-            @Override
+			private static final long serialVersionUID = -2062514408397714061L;
+
+			@Override
             public String generateDescription(Component source, Object itemId, Object propertyId) {
-                if (! (itemId instanceof Processing)){
+				if (!(itemId instanceof Processing)){
                     return null;
                 }
+                
                 if ("date".equals(propertyId)) {
                     return "Start date: "+new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(((Processing) itemId).getDate());
                 } else if ("project.name".equals(propertyId)) {
@@ -107,14 +112,15 @@ public class ItemList<T> extends Table {
                 } else if ("status".equals(propertyId)) {
                     return ((Processing) itemId).getStatus();
                 } else if ("user".equals(propertyId)) {
-                    final User owner = ((Processing) itemId).getUsers().iterator().next();
+                    final User owner = ((Processing) itemId).getUser();
                     String user = owner.getFirstName() + " " + owner.getLastName();
                     return user;
-                }  
+                }
+                
                 return null;
             }
         });
-
+        
 		bic.addAll(items);
 		setContainerDataSource(bic);
 		setVisibleColumns(fields.keySet().toArray());
@@ -136,7 +142,10 @@ public class ItemList<T> extends Table {
 		if(valueChangeListener != null) {
 			removeListener(valueChangeListener);
 		}
+		
 		valueChangeListener = new Property.ValueChangeListener() {
+			private static final long serialVersionUID = -6785076904973354745L;
+
 			@SuppressWarnings("unchecked")
 			@Override
 			public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
@@ -155,6 +164,7 @@ public class ItemList<T> extends Table {
 				}
 			}
 		};
+		
 		addListener(valueChangeListener);
 	}
 

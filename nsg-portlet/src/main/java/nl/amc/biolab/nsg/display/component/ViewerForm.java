@@ -25,7 +25,6 @@ import java.util.Map;
 import com.vaadin.data.util.MethodProperty;
 import com.vaadin.data.util.NestedMethodProperty;
 import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Field;
 import com.vaadin.ui.Form;
@@ -37,11 +36,13 @@ import com.vaadin.ui.VerticalLayout;
  *
  */
 abstract class ViewerForm<D> extends Form {
+	private static final long serialVersionUID = -2861088438980024974L;
+
 	private VerticalLayout layout = new VerticalLayout();
 
 	private final Map<Object, Field> fields = new LinkedHashMap<Object, Field>();
 	
-	private final ViewerForm<D> viewerForm = this;
+//	private final ViewerForm<D> viewerForm = this;
 
 	private D dataSource;
 

@@ -21,14 +21,12 @@ package nl.amc.biolab.nsg.display.data;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Submission;
-import nl.amc.biolab.nsgdm.SubmissionIO;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.SubmissionIO;
 
 /**
  * 
@@ -36,8 +34,10 @@ import nl.amc.biolab.nsgdm.SubmissionIO;
  *
  */
 public class DisplayProcessingStatus implements Serializable {
+	private static final long serialVersionUID = 1L;
+	
 	private List<DisplayProcessingInput> processingInputs = new ArrayList<DisplayProcessingInput>();
-	private List<DisplayProcessingOutput> processingOutputs = new ArrayList<DisplayProcessingOutput>();
+//	private List<DisplayProcessingOutput> processingOutputs = new ArrayList<DisplayProcessingOutput>();
 	private Processing processing;
 	private Collection<DataElement> inputDataList = new ArrayList<DataElement>();
 	private String status = "uploading";
@@ -80,22 +80,6 @@ public class DisplayProcessingStatus implements Serializable {
 
 	public String getStatus() {
 		return status;
-//                HashMap<String, Integer> map = new HashMap();
-//                for (Submission sub:processing.getSubmissions()) {
-//                    final String subStatus = sub.getStatus();
-//                    if (map.containsKey(subStatus)) {
-//                        map.put(subStatus, new Integer(map.get(subStatus)+1));
-//                    } else {
-//                        map.put(subStatus, new Integer(1));
-//                    }
-//                }
-//                StringBuffer statusSummary = new StringBuffer();
-//                for (String aStatus : map.keySet()) {
-//                    statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
-//                }
-//                final int length = statusSummary.length();
-//                if (length<3) return "No Submissions";
-//		return statusSummary.substring(0, length-2);
 	}
 
 	public void setStatus(String string) {

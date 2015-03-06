@@ -18,15 +18,32 @@
  */
 package nl.amc.biolab.nsg.display.service;
 
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Set;
 
-import nl.amc.biolab.nsg.ProcessingManager;
+import nl.amc.biolab.config.exceptions.ReaderException;
+import nl.amc.biolab.config.manager.ConfigurationManager;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.IOPort;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Value;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Error;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.LoggingFilter;
+import com.sun.jersey.api.json.JSONConfiguration;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
@@ -36,16 +53,17 @@ public class ProcessingService {
 	Logger logger = Logger.getLogger(ProcessingService.class);
 
 	protected UserDataService userDataService;
-        protected ProcessingManager processingManager = new ProcessingManager();
-	
+
+	// protected ProcessingManager processingManager = new ProcessingManager();
+
 	public ProcessingService() {
 	}
-	
+
 	public ProcessingService(UserDataService userDataService) {
 		logger.setLevel(Level.DEBUG);
 		this.userDataService = userDataService;
 	}
-	
+
 	/**
 	 * 
 	 * @param prjID
@@ -56,18 +74,188 @@ public class ProcessingService {
 	 * @param description
 	 * @return processing dbId
 	 */
-	public Long submit(Long prjID, Long appID, int appType, ArrayList<ArrayList<Long>> filesPerPorts, Long catUserID, Long liferayUserID, String description) {
+	@SuppressWarnings("unchecked")
+	public Long submit(Long userId, Long projectId, Processing processing, JSONArray submits) {
+
 		Long dbId = null;
+
 		try {
-//			userDataService.closeSession();
-			logger.debug("call processingManager submit appID " + appID + " nr ports " + filesPerPorts.size() + " nr port 0 input " + filesPerPorts.get(0).size());
-			dbId = processingManager.submit(prjID, appID, filesPerPorts, catUserID, Long.toString(liferayUserID), description, userDataService.getProcessingPersistance()); 
-		} catch(Exception e) {
+			userDataService.closeSession();
+
+			JSONObject submission = new JSONObject();
+
+			submission.put("applicationId", processing.getApplication().getDbId());
+			submission.put("description", processing.getName());
+			submission.put("userId", userId);
+			submission.put("projectId", projectId);
+			submission.put("submission", submits);
+
+			ClientConfig clientConfig = new DefaultClientConfig();
+			clientConfig.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+			Client client = Client.create(clientConfig);
+
+			// Logging
+			client.addFilter(new LoggingFilter(System.out));
+
+			WebResource webResource = client.resource(ConfigurationManager.read.getStringItem("nsg", "processing_url"));
+
+			ClientResponse response = webResource.accept("application/json").type("application/json").post(ClientResponse.class, submission);
+
+			int response_code = response.getStatus();
+			
+			if (response_code == 200) {
+				JSONObject body = response.getEntity(JSONObject.class);
+				
+				dbId = Long.valueOf((Integer) body.get("processingId"));
+			} else {
+				logger.debug("Error in REST #########################################");
+			}
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			userDataService.openSession();
 		}
+
 		return dbId;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONArray prepareSubmission(Processing processing, Set<Long> dataElementIds) {
+		JSONArray submission = new JSONArray();
+
+		String appName = processing.getApplication().getName();
+		
+		for (Long dbId : dataElementIds) {
+			JSONObject submissionIO = new JSONObject();
+			JSONArray inputs = new JSONArray();
+			JSONArray outputs = new JSONArray();
+			
+			DataElement de = userDataService.getDataElement(dbId);
+
+			// find matching inputs -> for tracula
+			if (appName.startsWith("Tracula")) {    // or appName.contains("Tracula"); also, ignore case? Prefer regex?
+	            String sessionUri = _getSessionUri(de.getURI());
+	            
+	            logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
+	            
+	            for (IOPort port : processing.getApplication().getInputPorts()) {
+	                if (!port.isVisible()) {    
+	                	// ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
+	                	DataElement el = userDataService.getMatchingInput(sessionUri, port.getDataFormat());
+	                	// NOTE: data element may be null if no match is found; although check is already performed when user selects a BedpostX reconstruction
+	                    inputs.add(_createSubmissionMap(port.getPortNumber(), el.getResource().getDbId(), el.getName(), el.getURI(), el.getFormat(), el.getType(), el.getSize(), el.getValues()));
+	                }
+	            }
+			}
+			
+			int inputPortNumber = processing.getApplication().getVisibleInputPorts().iterator().next().getPortNumber();
+			IOPort outputPort = processing.getApplication().getVisibleOutputPorts().iterator().next();
+			HashMap<String, String> outputData = _getOutputString(de, processing, outputPort);
+			Long outputResource = 1L;
+			
+			try {
+				outputResource = ConfigurationManager.read.getLongItem("nsg", "used_xnat_resource");
+			} catch (ReaderException e) {
+				e.printStackTrace();
+			}
+			
+			// Input
+			inputs.add(_createSubmissionMap(inputPortNumber, de.getResource().getDbId(), de.getName(), de.getURI(), de.getFormat(), de.getType(), de.getSize(), de.getValues()));
+			// Output
+			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputResource, outputData.get("name"), outputData.get("uri"), outputPort.getDataFormat(), outputPort.getDataType(), null, null));
+			
+			submissionIO.put("inputs", inputs);
+			submissionIO.put("outputs", outputs);
+			
+			submission.add(submissionIO);
+		}
+		
+		return submission;
+	}
+	
+	private String _getSessionUri(String dataElementUri) {
+        final String sessionDescriptor = "/experiments/";
+        
+        int sessionIndex = dataElementUri.indexOf(sessionDescriptor) + sessionDescriptor.length();
+        int endIndex = dataElementUri.indexOf("/", sessionIndex);
+        
+        if (sessionIndex == -1 || endIndex == -1) {
+        	throw new IllegalArgumentException("No session information could be found in the provided URI.");
+        }
+        
+        return dataElementUri.substring(0, endIndex);
+	}
+
+	@SuppressWarnings("unchecked")
+	private HashMap<String, Object> _createSubmissionMap(int portNumber, Long resourceId, String name, String dataUri, String format, String type, Integer size, Collection<Value> keyValues) {
+		HashMap<String, Object> submit_map = new HashMap<String, Object>();
+		
+		JSONObject keyValueObj = new JSONObject();
+
+		if (keyValues != null) {
+			Iterator<Value> iter = keyValues.iterator();
+			
+			while (iter.hasNext()) {
+				Value val = iter.next();
+				
+				keyValueObj.put(val.getKey().getName(), val.getValue());
+			}
+		}
+		
+		submit_map.put("portNumber", portNumber);
+		submit_map.put("name", name);
+		submit_map.put("data", dataUri);
+		submit_map.put("format", format);
+		submit_map.put("size", (size != null) ? size : 0);
+		submit_map.put("type", type);
+		submit_map.put("date", new Date());
+		submit_map.put("resourceId", resourceId);
+		submit_map.put("keyValuePairs", keyValueObj);
+
+		return submit_map;
+	}
+
+	private HashMap<String, String> _getOutputString(DataElement dataElement, Processing processing, IOPort outputPort) {
+		String reconString = null;
+		String returnURI = null;
+		String returnName = null;
+
+		System.out.println(userDataService.getProject().getValueByName("xnat_project_id"));
+		
+		String xnatID = userDataService.getProject().getValueByName("xnat_project_id");
+		String baseDataType = dataElement.getType();
+		// unique id
+		String subject = dataElement.getValueByName("xnat_subject_label");
+		String scanID = dataElement.getValueByName("xnat_scan_id");
+		String applicationName = processing.getApplication().getInternalName();
+		String reconstructionType = outputPort.getDataFormat().replace(" ", "_");
+
+		reconString = dataElement.getURI();
+
+		if (reconString.indexOf("/scans/") > 0) {
+			reconString = reconString.substring(0, reconString.indexOf("/scans/"));
+			reconString = reconString.replaceAll("/data/experiments/", "/data/archive/projects/" + xnatID + "/subjects/" + subject + "/experiments/");
+		} else if (reconString.indexOf("/reconstructions/") > 0) {
+			reconString = reconString.substring(0, reconString.indexOf("/reconstructions/"));
+		} else {
+			return null;
+		}
+		
+		returnURI = "base_string " + reconString.replace(" ", "_") + " xnat_project_id " + xnatID.replace(" ", "_") 
+				+ " base_data_type " + baseDataType.replace(" ", "_") + " xnat_subject_label " + subject.replace(" ", "_") 
+				+ " xnat_scan_id " + scanID.replace(" ", "_") + " application_name " + applicationName.replace(" ", "_")
+				+ " reconstruction_type " + reconstructionType.replace(" ", "_");
+
+		returnName = subject + ".Recon." + scanID + "." + reconstructionType;
+		
+		System.out.println("Output: " + returnURI);
+
+		HashMap<String, String> returnVal = new HashMap<String, String>();
+		
+		returnVal.put("name", returnName.replace(" ", "_"));
+		returnVal.put("uri", returnURI);
+		
+		return returnVal;
 	}
 
 	/**
@@ -75,39 +263,42 @@ public class ProcessingService {
 	 * @param processing
 	 * @param userId
 	 * @param liferayUserID
-	 * @param refresh processing status
+	 * @param refresh
+	 *            processing status
 	 * @return
 	 */
 	public DisplayProcessingStatus getProcessingStatus(Processing processing, Long userId, Long liferayUserID, boolean refresh) {
-		logger.info("liferayUserID " + liferayUserID + "/Processing " + processing + "/ processing " + ((processing != null) ? processing.getDbId() : "null"));
+		logger.info("liferayUserID " + liferayUserID + "/Processing " + processing + "/ processing "
+				+ ((processing != null) ? processing.getDbId() : "null"));
 		DisplayProcessingStatus processingStatus = new DisplayProcessingStatus();
 		processingStatus.setProcessing(processing);
 		String status = "";
 		try {
-//			userDataService.closeSession();
-			if(refresh) {
-				processingManager.updateStatus(processing.getDbId(), userDataService.getProcessingPersistance());
+			// userDataService.closeSession();
+			if (refresh) {
+				// TODO processingManager.updateStatus(processing.getDbId(),
+				// userDataService.getProcessingPersistance());
 			}
 			status = processing.getStatus();
-		} catch(Exception e) {
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 		processingStatus.setStatus(status);
-		
+
 		try {
 			processingStatus.setSubmissionIOs(userDataService.getSubmissionIO(processing.getDbId()));
 		} catch (Exception e) {
 			logger.error(e.getMessage());
 			e.printStackTrace();
 		}
-	
+
 		return processingStatus;
-		
+
 	}
-	
-	public Error getSubmissionError(long submissionId) {
+
+	public nl.amc.biolab.datamodel.objects.Error getSubmissionError(long submissionId) {
 		return userDataService.getSubmissionError(submissionId);
 	}
 
@@ -119,78 +310,82 @@ public class ProcessingService {
 	 */
 	public void resubmit(long processingDbId, long submissionDbId, Long userId, Long liferayUserID) {
 		try {
-//			userDataService.closeSession();
-			processingManager.resubmit(processingDbId, submissionDbId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// userDataService.closeSession();
+			// TODO processingManager.resubmit(processingDbId, submissionDbId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 	}
-	
+
 	public void resubmit(long processingDbId) {
 		try {
-//			userDataService.closeSession();
-			processingManager.resubmit(processingDbId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// userDataService.closeSession();
+			// TODO processingManager.resubmit(processingDbId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
+			// userDataService.openSession();
 		}
 	}
-	
+
 	/**
 	 * 
 	 * @param submissionDbId
-	 * @param text with fail remarks
+	 * @param text
+	 *            with fail remarks
 	 */
 	public void markFailed(long submissionDbId, String text) {
 		try {
-//			userDataService.closeSession();
-			processingManager.markFailed(submissionDbId, text, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.markFailed(submissionDbId, text,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		} finally {
-//			userDataService.openSession();
 		}
 	}
 
-        public void markFailed(long processingId) {
+	public void markFailed(long processingId) {
 		try {
-			processingManager.markFailed(processingId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.markFailed(processingId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
-        public void restart(long processingId) {
+	public void restart(long processingId) {
 		try {
-			processingManager.restart(processingId, userDataService.getProcessingPersistance());
-		} catch(Exception e) {
+			// TODO processingManager.restart(processingId,
+			// userDataService.getProcessingPersistance());
+		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
 
-        public void shutdown() {
-            processingManager.shutdown();
-        }
-//
-//    private String getStatus(Processing processing) {
-//                HashMap<String, Integer> map = new HashMap();
-//                for (Submission sub:processing.getSubmissions()) {
-//                    final String subStatus = sub.getStatus();
-//                    if (map.containsKey(subStatus)) {
-//                        map.put(subStatus, new Integer(map.get(subStatus)+1));
-//                    } else {
-//                        map.put(subStatus, new Integer(1));
-//                    }
-//                }
-//                StringBuffer statusSummary = new StringBuffer();
-//                for (String aStatus : map.keySet()) {
-//                    statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
-//                }
-//                final int length = statusSummary.length();
-//                if (length<3) return "No Submissions";
-//		return statusSummary.substring(0, length-2);
-//     }
+	public void shutdown() {
+		// TODO processingManager.shutdown();
+	}
+	//
+	// private String getStatus(Processing processing) {
+	// HashMap<String, Integer> map = new HashMap();
+	// for (Submission sub:processing.getSubmissions()) {
+	// final String subStatus = sub.getStatus();
+	// if (map.containsKey(subStatus)) {
+	// map.put(subStatus, new Integer(map.get(subStatus)+1));
+	// } else {
+	// map.put(subStatus, new Integer(1));
+	// }
+	// }
+	// StringBuffer statusSummary = new StringBuffer();
+	// for (String aStatus : map.keySet()) {
+	// statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
+	// }
+	// final int length = statusSummary.length();
+	// if (length<3) return "No Submissions";
+	// return statusSummary.substring(0, length-2);
+	// }
 }

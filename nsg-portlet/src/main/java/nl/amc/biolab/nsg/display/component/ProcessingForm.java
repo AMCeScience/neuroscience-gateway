@@ -26,12 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Processing;
-
-import org.apache.log4j.Logger;
 
 import com.vaadin.data.Item;
 import com.vaadin.data.Property;
@@ -61,17 +59,15 @@ public class ProcessingForm extends Form {
 
 	protected static final String SUBMIT = "start";
 
-	private static Logger logger = Logger.getLogger(ProcessingForm.class);
-
 	private VerticalLayout layout = new VerticalLayout();
 	private Select app = new Select();
 	private TextField name = new TextField("name");
-	private TextField param = new TextField("parameters");
 	private ListSelect inputData = new ListSelect();
 	private LabelField appDescription;
 
 	private Processing processing = new Processing();
 	private Set<DataElement> dataElements = new HashSet<DataElement>();
+	private Application tempApp = null;
 
 	private final Map<String, Field> fields = new HashMap<String, Field>();
 
@@ -93,7 +89,7 @@ public class ProcessingForm extends Form {
 
 	public void setProcessingFields() {
 		Map<String, Field> fields = new HashMap<String, Field>();
-                
+
 		app.setImmediate(false);
 		app.setWidth("79%");
 		app.setHeight("-1px");
@@ -111,16 +107,8 @@ public class ProcessingForm extends Form {
 		name.setRequiredError("Description is required");
 		name.setCaption("Description (max 50 characters)");
 		name.setNullRepresentation("");
-		name.addValidator(new RegexpValidator(".{1,50}", "desctiption is too long"));
+		name.addValidator(new RegexpValidator(".{1,50}", "description is too long"));
 		fields.put("name", name);
-                
-//                param.setWidth("50%");
-//                param.setRequired(true);
-//                param.setRequiredError("Parameters are required.");
-//                param.setCaption("parameter values to be passed to the application.");
-//                param.setNullRepresentation("");
-//                fields.put("parameters", param);
-//                layout.addComponent(param);
 
 		inputData.setMultiSelect(true);
 		inputData.setWidth("97%");
@@ -136,6 +124,8 @@ public class ProcessingForm extends Form {
 	public void setFields(Map<String, Field> fields) {
 		this.fields.putAll(fields);
 		setFormFieldFactory(new FormFieldFactory() {
+			private static final long serialVersionUID = -832396402143639278L;
+
 			@Override
 			public Field createField(Item item, Object propertyId, Component uiContext) {
 				return form.fields.get((String) propertyId);
@@ -143,76 +133,92 @@ public class ProcessingForm extends Form {
 		});
 	}
 
-	public Processing getProcessing(){
+	public Processing getProcessing() {
 		return processing;
 	}
 
 	public void setProcessing(Set<DataElement> inputDataList, List<Application> applications) {
 		this.processing = new Processing();
+
 		processing.setName((String) name.getValue());
+
 		setItemDataSource((Item) new BeanItem<Processing>(processing), fields.keySet());
 
-		//applications
-		Select app2 = new Select();
-		app2.setImmediate(false);
-		app2.setWidth("97%");
-		app2.setHeight("-1px");
-		app2.setRequired(true);
-		app2.setRequiredError("Application is required");
-		app2.setCaption("Application");
-		layout.replaceComponent(app, app2);
-		layout.removeComponent(app);
-		app = app2;
-		fields.put("application", app);
+		// applications
+		//Select app = new Select();
+
+//		app2.setImmediate(false);
+//		app2.setWidth("97%");
+//		app2.setHeight("-1px");
+//		app2.setRequired(true);
+//		app2.setRequiredError("Application is required 123");
+//		app2.setCaption("Application");
+
+//		layout.replaceComponent(app, app2);
+//		layout.removeComponent(app);
+
+//		app = app2;
+
+//		fields.put("application", app);
 
 		app.setNullSelectionAllowed(false);
 		app.setNewItemsAllowed(false);
 		app.setItemCaptionMode(Select.ITEM_CAPTION_MODE_PROPERTY);
 		app.setItemCaptionPropertyId("name");
+
 		BeanItemContainer<Application> abic = new BeanItemContainer<Application>(Application.class);
 		abic.addAll(applications);
-		app.setContainerDataSource(abic);
-		if(applications.size() != 0) {
-			app.setValue(applications.get(0));
-		}
 
-		//application description
+		app.setContainerDataSource(abic);
+
+		// application description
 		if (applications != null && applications.size() != 0) {
+			tempApp = applications.get(0);
+
+			app.setValue(applications.get(0).getDbId());
 			app.select(applications.get(0));
+
 			appDescription.setLabelValue(applications.get(0).getDescription());
+
 			app.addListener(new Property.ValueChangeListener() {
+				private static final long serialVersionUID = -5315052115453471609L;
+
 				@Override
 				public void valueChange(com.vaadin.data.Property.ValueChangeEvent event) {
 					LabelField lf = new LabelField();
+
 					lf.addStyleName("bordered");
-					lf.setLabelValue(((Application) app.getValue()).getDescription());
+					lf.setLabelValue(tempApp.getDescription());
+
 					layout.replaceComponent(appDescription, lf);
+
 					appDescription = lf;
+
 					fields.put("description", appDescription);
 				}
 			});
-
 		}
 
-		//dateElements
+		// dateElements
 		if (inputDataList != null) {
-			for(DataElement de: inputDataList ) {
+			for (DataElement de : inputDataList) {
 				dataElements.add(de);
 			}
 		}
+
 		setInputData(dataElements);
 	}
 
 	public void setInputData(Set<DataElement> inputDataList) {
 		BeanItemContainer<DataElement> dbic = new BeanItemContainer<DataElement>(DataElement.class);
-		if(inputDataList != null && inputDataList.size() != 0) {
+		if (inputDataList != null && inputDataList.size() != 0) {
 			dbic.addAll(Arrays.asList(inputDataList.toArray(new DataElement[0])));
 		}
 		inputData.setContainerDataSource(dbic);
 		inputData.setItemCaptionMode(Select.ITEM_CAPTION_MODE_PROPERTY);
 		inputData.setItemCaptionPropertyId("name");
 		inputData.setMultiSelect(true);
-		for(Object iid: inputData.getItemIds()) {
+		for (Object iid : inputData.getItemIds()) {
 			inputData.select(iid);
 		}
 	}
@@ -224,24 +230,37 @@ public class ProcessingForm extends Form {
 		getLayout().addComponent(buttons);
 
 		final Button startButton = new NativeButton();
+		
 		startButton.setCaption(SUBMIT);
 		startButton.setImmediate(true);
 		startButton.setWidth("-1px");
 		startButton.setHeight("-1px");
 		startButton.addListener(new Button.ClickListener() {
+			private static final long serialVersionUID = 1906358615316029946L;
+
 			public void buttonClick(ClickEvent event) {
+				System.out.println(app.getValue());
+				
 				Set<Long> inputDbIds = new HashSet<Long>();
-				for(Object iid: inputData.getItemIds()) {
+				
+				for (Object iid : inputData.getItemIds()) {
 					inputData.select(iid);
-					inputDbIds.add(((DataElement)iid).getDbId());
+					
+					inputDbIds.add(((DataElement) iid).getDbId());
 				}
-				((VaadinTestApplication)getApplication()).getUserDataService().setDataElementDbIds(inputDbIds);
+				
+				((VaadinTestApplication) getApplication()).getUserDataService().setDataElementDbIds(inputDbIds);
+				
 				form.commit();
+				
 				processing.setApplication((Application) app.getValue());
+				
 				startButton.setData(processing);
+				
 				form.fireEvent(new Event(startButton));
 			}
 		});
+		
 		buttons.addComponent(startButton);
 		buttons.setComponentAlignment(startButton, Alignment.TOP_RIGHT);
 
@@ -251,9 +270,12 @@ public class ProcessingForm extends Form {
 		delButton.setWidth("-1px");
 		delButton.setHeight("-1px");
 		delButton.addListener(new Button.ClickListener() {
+			private static final long serialVersionUID = -3377452914254101817L;
+
+			@SuppressWarnings("unchecked")
 			public void buttonClick(ClickEvent event) {
-				if(inputData.getValue() != null) {
-					for(DataElement de: (Set<DataElement>) inputData.getValue() ) {
+				if (inputData.getValue() != null) {
+					for (DataElement de : (Set<DataElement>) inputData.getValue()) {
 						inputData.removeItem(de);
 						dataElements.remove(de);
 					}

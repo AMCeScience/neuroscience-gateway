@@ -18,16 +18,16 @@
  */
 package nl.amc.biolab.nsg.display.data;
 
-import nl.amc.biolab.nsgdm.SubmissionIO;
+import nl.amc.biolab.datamodel.objects.SubmissionIO;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
  *
  */
 public class DisplayProcessingOutput extends SubmissionIO {
-	public DisplayProcessingOutput() {
-		// TODO Auto-generated constructor stub
-	}
+	private static final long serialVersionUID = 1L;
+
+	public DisplayProcessingOutput() { }
 
 	/**
 	 * @param sio

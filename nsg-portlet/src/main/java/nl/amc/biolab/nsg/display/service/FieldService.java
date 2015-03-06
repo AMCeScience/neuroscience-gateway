@@ -21,10 +21,10 @@ package nl.amc.biolab.nsg.display.service;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import nl.amc.biolab.nsgdm.Application;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.Project;
+import nl.amc.biolab.datamodel.objects.Application;
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.Project;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
@@ -37,37 +37,51 @@ public class FieldService {
 	protected Map<String, Map<String, String>> fieldHeader = new LinkedHashMap<String, Map<String, String>>();
 	
 	public FieldService() {
-		//TODO refactor: get from backend
+		Map<String, String> map = new LinkedHashMap<String, String>() {
+			private static final long serialVersionUID = 3237593737579708191L;
 
-		Map<String, String> map = new LinkedHashMap<String, String>() {{
+		{
 			put("name", "name");
 			put("description", "description");
+			put("resource", "resource");
 		}};
+		
 		fieldHeader.put(Project.class.getName(), map);
 
-		map = new LinkedHashMap<String, String>() {{
-			put("subject", "subject");
+		map = new LinkedHashMap<String, String>() {
+			private static final long serialVersionUID = -3805582004354600240L;
+
+		{
 			put("date", "date");
 			put("type", "type");
-			put("scanID", "scan ID");
+			put("subject", "subject");
 			put("format", "format");
-			put("resource.name", "source");
+			put("resource", "source");
 		}};
+		
 		fieldHeader.put(DataElement.class.getName(), map);
 
-		map = new LinkedHashMap<String, String>() {{
+		map = new LinkedHashMap<String, String>() {
+			private static final long serialVersionUID = 251984553853306335L;
+
+		{
 			put("date", "date");
 			put("project.name", "project");
 			put("description", "description");
 			put("application.name", "application");
 			put("status", "status");
 		}};
+		
 		fieldHeader.put(Processing.class.getName(), map);
 
-		map = new LinkedHashMap<String, String>() {{
+		map = new LinkedHashMap<String, String>() {
+			private static final long serialVersionUID = -1515472322318785401L;
+
+		{
 			put("name", "name");
 			put("description", "description");
 		}};
+		
 		fieldHeader.put(Application.class.getName(), map);
 	}
 

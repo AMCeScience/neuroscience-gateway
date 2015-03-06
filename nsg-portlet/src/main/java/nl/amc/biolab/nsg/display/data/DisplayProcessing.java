@@ -18,41 +18,36 @@
  */
 package nl.amc.biolab.nsg.display.data;
 
-import nl.amc.biolab.nsgdm.Processing;
-import nl.amc.biolab.nsgdm.User;
+import nl.amc.biolab.datamodel.objects.Processing;
+import nl.amc.biolab.datamodel.objects.User;
 
 /**
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
  *
  */
 public class DisplayProcessing extends Processing {
-	private String user = "";
+	private static final long serialVersionUID = 1L;
+	private User user = null;
 	
 	public DisplayProcessing(Processing p) {
 		setProject(p.getProject());
 		setApplication(p.getApplication());
-		setPorts(p.getPorts());
+//		setPorts(p.getPorts());
 		setSubmissions(p.getSubmissions());
-		setUsers(p.getUsers());
-		setExperimentACLs(p.getExperimentACLs());
+		setUser(p.getUser());
+//		setExperimentACLs(p.getExperimentACLs());
 		setDbId(p.getDbId());
 		setName(p.getName());
 		setDescription(p.getDescription());
-		setStatus(p.getStatus());
+//		setStatus(p.getStatus());
 		setDate(p.getDate());
-		
-		if(getUsers().iterator().hasNext()) {
-            final User owner = getUsers().iterator().next();
-			user = owner.getFirstName()+" "+owner.getLastName();
-			//user = getUsers().iterator().next().getLiferayID();
-		}
 	}
 
-	public String getUser() {
+	public User getUser() {
 		return user;
 	}
 
-	public void setUser(String user) {
+	public void setUser(User user) {
 		this.user = user;
 	}
 }

@@ -22,11 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import nl.amc.biolab.datamodel.objects.DataElement;
+import nl.amc.biolab.nsg.dataobjects.NsgProperty;
 import nl.amc.biolab.nsg.display.service.FieldService;
-import nl.amc.biolab.nsgdm.DataElement;
-import nl.amc.biolab.nsgdm.Property;
 
-import com.vaadin.ui.Button;
 import com.vaadin.ui.Component;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Table;
@@ -43,7 +42,7 @@ class DataElementForm extends ViewerForm<DataElement> {
 		this.fieldService = fieldService;
 	}
 
-	public void setDataElement(DataElement dataElement,  List<Property> metadata) {
+	public void setDataElement(DataElement dataElement,  List<NsgProperty> metadata) {
 		if (dataElement == null) {
 			return;
 		}
@@ -53,6 +52,7 @@ class DataElementForm extends ViewerForm<DataElement> {
 		setDataSource(dataElement);
 
 		Map<String, String> fields = fieldService.getFieldHeaders(DataElement.class.getName());
+		
 		for(String k: fields.keySet()) {
 			addLabelField(k, fields.get(k));
 		}
@@ -72,8 +72,8 @@ class DataElementForm extends ViewerForm<DataElement> {
 			table.setCaption("properties");
 			table.addContainerProperty("key", String.class,  null);
 			table.addContainerProperty("value",  String.class,  null);
-			for (Property p: metadata) {
-				table.addItem(new Object[] {p.getDescription(),p.getValue()}, p);
+			for (NsgProperty p: metadata) {
+				table.addItem(new Object[] {p.getDescription(), p.getValue()}, p);
 			}
 			getLayout().addComponent(table);
 		}

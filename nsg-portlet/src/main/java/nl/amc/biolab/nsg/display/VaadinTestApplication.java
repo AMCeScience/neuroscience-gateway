@@ -18,15 +18,13 @@
  */
 package nl.amc.biolab.nsg.display;
 
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Set;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 import javax.portlet.PortletSession;
-import javax.servlet.http.HttpServletRequest;
 
+import nl.amc.biolab.nsg.display.component.LoginUI;
 import nl.amc.biolab.nsg.display.control.MainControl;
 import nl.amc.biolab.nsg.display.service.FieldService;
 import nl.amc.biolab.nsg.display.service.ProcessingService;
@@ -51,10 +49,9 @@ import com.vaadin.ui.Component;
 import com.vaadin.ui.HorizontalLayout;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.Window;
-import nl.amc.biolab.nsg.display.component.LoginUI;
 
 /**
- * The main (Vaadin) Application TODO rename and refactor
+ * The main (Vaadin) Application
  *
  * @author initial architecture and implementation: m.almourabit@amc.uva.nl<br/>
  *
@@ -74,7 +71,6 @@ public class VaadinTestApplication extends Application implements PortletRequest
     public static final String SESS_DATA = "data";
     public static final String SESS_PROCESSING = "proc";
 
-    public static final int ADMIN = 5;
     public static final int PROCESSING = 4;
     public static final int DATA = 3;
     public static final int PROJECTS = 2;
@@ -93,31 +89,23 @@ public class VaadinTestApplication extends Application implements PortletRequest
     private MainControl mainControl;
 
     private PortletSession portletSession;
-
-    private boolean adminURL;
-
+    
     @Override
     public void init() {
         logger.setLevel(Level.DEBUG);
+        
         setErrorHandler(new ErrorListener() {
-            @Override
+			private static final long serialVersionUID = -7266040717402386801L;
+
+			@Override
             public void terminalError(com.vaadin.terminal.Terminal.ErrorEvent event) {
                 if (event.getThrowable().getCause() instanceof InvalidValueException) {
                     return;
                 }
+                
                 logger.error("Error occured");
+                
                 event.getThrowable().printStackTrace();
-//				if (userDataService != null) {
-//					try {
-//						userDataService.closeSession();
-//					} catch (Exception e) {
-//					}
-//					try {
-//						userDataService.openSession();
-//					} catch (Exception e) {
-//						e.printStackTrace();
-//					}
-//				}
             }
         });
 
@@ -128,61 +116,80 @@ public class VaadinTestApplication extends Application implements PortletRequest
         getMainWindow().setWidth("100%");
         getMainWindow().setHeight("300px");
 
+        // If no user is set do not load the application
         if (getUser() == null) {
             userDataService = null;
+            
             return;
         }
 
-        if (userDataService == null || userDataService.getXnatUser() == null) {
+        // If no userDataService is set yet, or the user is not logged in yet
+        // Set the userDataService and check XNAT connectivity
+        // Parses errors coming back and displays them in the application when necessary
+        if (userDataService == null || userDataService.xnatLogin() == false) {
             try {
-                setUserDataService(((User) getUser()).getScreenName(), ((User) getUser()).getUserId(), false);
-//				if(getPage() == DATA && this.getUserDataService() != null && this.getUserDataService().getUserId() == 0L && getUserDataService().getProjectDbId() == null) {
-//					this.getUserDataService().xnatLogin();
-//				} 
-            } catch (RuntimeException e) { // nsgdm throws RuntimeExceptions
-                if (e == null || e.getMessage() == null || !(e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD) || e.getMessage().equals(UserDataService.NO_USER))) {
+                setUserDataService(((User) getUser()).getScreenName(), ((User) getUser()).getUserId());
+                
+				if(getPage() == DATA && this.getUserDataService() != null 
+						&& this.getUserDataService().getUserId() == 0L 
+						&& getUserDataService().getProjectDbId() == null) {
+					this.getUserDataService().xnatLogin();
+				}
+            } catch (RuntimeException e) {
+                if (e == null || e.getMessage() == null || (!(e.getMessage().equals("No Password.") && !e.getMessage().equals("Wrong Password.") && !e.getMessage().equals("No User login.")))) {
                     HorizontalLayout layout = new HorizontalLayout();
+                    
+                    Label label = new Label("Server error. Please contact the administrator");
+                    
                     layout.setWidth("100%");
                     layout.setHeight("300px");
-                    Label label = new Label("Server error. Please contact the administrator");
                     layout.removeAllComponents();
                     layout.addComponent(label);
+                    
                     getMainWindow().removeAllComponents();
                     getMainWindow().addComponent(layout);
+                    
                     return;
-                } else if (e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD)) {
+                } else if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
                     getMainWindow().removeAllComponents();
                     getMainWindow().showNotification("Please enter your XNAT password");
-                } else if (e.getMessage().equals(UserDataService.NO_USER)) { //nsgdm api not returning this message?
-                    getMainWindow().showNotification(UserDataService.NO_USER);
+                } else if (e.getMessage().equals("No User login.")) {
+                    getMainWindow().showNotification("No User login.");
+                    
                     HorizontalLayout layout = new HorizontalLayout();
+                    
+                    Label label = new Label("Loading page.");
+                    
                     layout.setWidth("100%");
                     layout.setHeight("300px");
-                    Label label = new Label("Loading page.");
                     layout.addComponent(label);
+                    
                     label = new Label("Please contact the administrator for XNAT user setup");
+                    
                     layout.removeAllComponents();
                     layout.addComponent(label);
+                    
                     getMainWindow().removeAllComponents();
                     getMainWindow().addComponent(layout);
+                    
                     return;
                 }
             }
-//		} else {
-//			userDataService.openSession();  // TODO: it is initialized in the contructor already I suppose. To check if it works like this.
         }
-        logger.debug("Creating processing service object.");
+        
         processingService = new ProcessingService(userDataService);
 
-        logger.debug("Created vaadin application. Proceed to create display components.");
         getMainWindow().removeAllComponents();
+        
         this.mainControl = new MainControl(this);
-        logger.debug("Finished creating the application and the components.");
+        
+//        logger.debug("Finished creating the application and the components.");
     }
 
     @Override
     public void close() {
         logger.info("Shutting down an instance of NSG portlet application.");
+        
         if (userDataService != null) {
             try {
                 userDataService.closeSession();
@@ -190,6 +197,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
                 logger.debug(e.getMessage());
             }
         }
+        
         if (processingService != null) {
             try {
                 processingService.shutdown();
@@ -197,139 +205,133 @@ public class VaadinTestApplication extends Application implements PortletRequest
                 logger.debug(e.getMessage());
             }
         }
+        
         super.close();
     }
 
     @Override
     public void onRequestStart(PortletRequest request, PortletResponse response) {
         this.portletSession = request.getPortletSession();
-//        logger.debug("There is a request: ");
-        final Object phase = request.getAttribute("javax.portlet.lifecycle_phase");
-//                final Enumeration<String> attributeNames = request.getAttributeNames();
-//                while (attributeNames.hasMoreElements()) {
-//                    final String attr = attributeNames.nextElement();
-//                    logger.debug("Attribute: ("+attr+", "+request.getAttribute(attr)+")");
-//                }
-//                final Enumeration<String> paramNames = request.getParameterNames();
-//                while (paramNames.hasMoreElements()) {
-//                    final String param = paramNames.nextElement();
-//                    logger.debug("Attribute: ("+param+", "+request.getParameter(param)+")");
-//                }
-        logger.debug("Lifecycle phase is: " + phase);
+
+//        final Object phase = request.getAttribute("javax.portlet.lifecycle_phase");
+
+//        logger.debug("Lifecycle phase is: " + phase);
+        
         if (getUser() == null) {
             logger.debug("User is null, so checking theme display.");
+            
             PermissionChecker permissionChecker = null;
             ThemeDisplay themeDisplay = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
+            
             if (themeDisplay != null) {
                 permissionChecker = themeDisplay.getPermissionChecker();
             }
 
             if (permissionChecker == null || !permissionChecker.isSignedIn()) {
                 setUser(null);
+                
                 return;
             }
 
             setUser(themeDisplay.getUser());
         }
 
-        logger.debug("Setting the URL and page.");
+//        logger.debug("Setting the URL and page.");
+        
         if (PortalUtil.getCurrentURL(request).contains(PROJECTS_URL)) {
             this.page = PROJECTS;
         } else if (PortalUtil.getCurrentURL(request).contains(DATA_URL)) {
             this.page = DATA;
         } else if (PortalUtil.getCurrentURL(request).contains(PROCESSING_URL)) {
             this.page = PROCESSING;
-        } else if (PortalUtil.getCurrentURL(request).contains(ADMIN_URL)) {
-            this.page = PROCESSING;
-            this.adminURL = true;
         }
 
         if (getUser() != null && getUserDataService() != null) {
-//            logger.debug("Checking correctness of the URL.");
-            HttpServletRequest req = PortalUtil.getOriginalServletRequest(PortalUtil.getHttpServletRequest(request));
-
             if (!(PortalUtil.getCurrentURL(request).contains(PROJECTS_URL)
                     || PortalUtil.getCurrentURL(request).contains(DATA_URL)
-                    || PortalUtil.getCurrentURL(request).contains(PROCESSING_URL)
-                    || PortalUtil.getCurrentURL(request).contains(ADMIN_URL))) {
+                    || PortalUtil.getCurrentURL(request).contains(PROCESSING_URL))) {
                 return;
             }
 
-//            logger.debug("Reading http servlet request attributes!!!");
-            Enumeration<String> en = PortalUtil.getOriginalServletRequest(PortalUtil.getHttpServletRequest(request)).getAttributeNames();
-            while (en.hasMoreElements()) {
-                String n = en.nextElement();
-            }
-
-//            logger.debug("Setting session specific variables.");
             try {
                 if (portletSession.getAttribute(SESS_PROJECT, PortletSession.APPLICATION_SCOPE) != null) {
                     final Long projectId = (Long) portletSession.getAttribute(SESS_PROJECT, PortletSession.APPLICATION_SCOPE);
                     getUserDataService().setProjectDbId(projectId);
-                    logger.debug("Selected Project is: " + projectId);
+//                    logger.debug("Selected Project is: " + projectId);
                 }
-//                if (portletSession.getAttribute(SESS_DATA, PortletSession.APPLICATION_SCOPE) != null) {
-//                    getUserDataService().setDataElementDbIds((Set<Long>) portletSession.getAttribute(SESS_DATA, PortletSession.APPLICATION_SCOPE));
-//                    logger.debug("Data session is read.");
-//                }
+
                 if (portletSession.getAttribute(SESS_PROCESSING, PortletSession.APPLICATION_SCOPE) != null) {
                     getUserDataService().setProcessingDbId((Long) portletSession.getAttribute(SESS_PROCESSING, PortletSession.APPLICATION_SCOPE));
-                    logger.debug("Processing session is read.");
+//                    logger.debug("Processing session is read.");
                 }
-//                if (portletSession.getAttribute("processingID", PortletSession.APPLICATION_SCOPE) != null) {
-//                    final Long procID = (Long) portletSession.getAttribute("processingID", PortletSession.APPLICATION_SCOPE);
-//                    getUserDataService().setProcessingDbId(procID);
-//                    logger.debug("Processing ID set to "+procID);
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            
             if (PortalUtil.getCurrentURL(request).contains("wsver") && mainControl != null) {
                 try {
                     if (getPage() == DATA && (this.getUserDataService().getUserId() == 0L || getUserDataService().getProjectDbId() != null)) {
                         this.getUserDataService().xnatLogin();
                     }
+                    
                     mainControl.update();
-                } catch (RuntimeException e) { // nsgdm throws RuntimeExceptions
-                    if (e == null || e.getMessage() == null || !(e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD) || e.getMessage().equals(UserDataService.NO_USER))) {
+                } catch (RuntimeException e) {
+                    if (e == null || e.getMessage() == null || !(e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.") || e.getMessage().equals("No User login."))) {
                         HorizontalLayout layout = new HorizontalLayout();
+                        
+                        Label label = new Label("Server error. Please sign out and sign in again, and if the problem persists, contact the administrator.");
+                        
                         layout.setWidth("100%");
                         layout.setHeight("300px");
-                        Label label = new Label("Server error. Please sign out and sign in again, and if the problem persists, contact the administrator.");
                         layout.removeAllComponents();
                         layout.addComponent(label);
+                        
                         getMainWindow().removeAllComponents();
                         getMainWindow().addComponent(layout);
+                        
                         e.printStackTrace();
+                        
                         return;
-                    } else if (e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD)) {
+                    } else if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
                         HorizontalLayout layout = new HorizontalLayout();
+                        
                         layout.removeAllComponents();
+                        
                         LoginUI loginUI = new LoginUI(mainControl);
+                        
                         loginUI.addListener(new Component.Listener() {
-                            @Override
+							private static final long serialVersionUID = -2775815874196476965L;
+
+							@Override
                             public void componentEvent(Component.Event event) { // login failed
-                                mainControl.init((nl.amc.biolab.nsgdm.User) ((Button) event.getSource()).getData());
+                                mainControl.init((nl.amc.biolab.datamodel.objects.User) ((Button) event.getSource()).getData());
                             }
                         });
+                        
                         layout.addComponent(new LoginUI(mainControl));
 
                         getMainWindow().removeAllComponents();
                         getMainWindow().showNotification("Your XNAT password was not recognized.");
                         getMainWindow().addComponent(layout);
-
-                    } else if (e.getMessage().equals(UserDataService.NO_USER)) { //nsgdm api not returning this message?
-                        getMainWindow().showNotification(UserDataService.NO_USER);
+                    } else if (e.getMessage().equals("No User login.")) { //nsgdm api not returning this message?
+                        getMainWindow().showNotification("No User login.");
+                        
                         HorizontalLayout layout = new HorizontalLayout();
+                        
+                        Label label = new Label("Loading page.");
+                        
                         layout.setWidth("100%");
                         layout.setHeight("300px");
-                        Label label = new Label("Loading page.");
                         layout.addComponent(label);
+                        
                         label = new Label("Please contact the administrator for XNAT user setup");
+                        
                         layout.removeAllComponents();
                         layout.addComponent(label);
+                        
                         getMainWindow().removeAllComponents();
                         getMainWindow().addComponent(layout);
+                        
                         return;
                     }
                 }
@@ -342,8 +344,7 @@ public class VaadinTestApplication extends Application implements PortletRequest
     }
 
     @Override
-    public void onRequestEnd(PortletRequest request, PortletResponse response) {
-    }
+    public void onRequestEnd(PortletRequest request, PortletResponse response) {}
 
     /**
      *
@@ -355,15 +356,16 @@ public class VaadinTestApplication extends Application implements PortletRequest
 
     /**
      *
-     * set userDataService for current user</br>
+     * set userDataService and open a new session for current user</br>
      *
      * @param liferayId
      */
-    public void setUserDataService(String screenName, Long liferayId, boolean xnatLogin) {
+    public void setUserDataService(String screenName, Long liferayId) {
         if (this.getUserDataService() != null) {
             this.getUserDataService().closeSession();
         }
-        this.userDataService = new UserDataService(screenName, liferayId, xnatLogin);   // will open a new session inside
+        
+        this.userDataService = new UserDataService(screenName, liferayId);
     }
 
     public FieldService getFieldService() {
@@ -396,10 +398,6 @@ public class VaadinTestApplication extends Application implements PortletRequest
 
     public String getVersion() {
         return "1.0";
-    }
-
-    public boolean isAdminURL() {
-        return adminURL;
     }
 
     /**

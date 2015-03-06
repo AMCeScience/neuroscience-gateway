@@ -18,15 +18,14 @@
  */
 package nl.amc.biolab.nsg.display.control;
 
+import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.component.LoginUI;
 import nl.amc.biolab.nsg.display.component.MainUI;
-import nl.amc.biolab.nsgdm.User;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.vaadin.terminal.ExternalResource;
 import com.vaadin.ui.Button;
 import com.vaadin.ui.Component.Event;
 import com.vaadin.ui.Component.Listener;
@@ -40,9 +39,7 @@ import com.vaadin.ui.Window;
  *
  */
 public class MainControl {
-
     Logger logger = LoggerFactory.getLogger(MainControl.class);
-    private static final long serialVersionUID = -8971079822824542521L;
 
     private VaadinTestApplication app;
 
@@ -64,12 +61,16 @@ public class MainControl {
         this();
         this.app = app;
         this.mainWindow = app.getMainWindow();
+        
         layout.setWidth("100%");
         layout.setHeight("100%");
+        
         User user = null;
+        
         if (app.getUserDataService() != null) {
             user = app.getUserDataService().getUser();
         }
+        
         init(user);
     }
 
@@ -87,17 +88,24 @@ public class MainControl {
         } else if (app.getUserDataService() != null) {
             if (app.getUserDataService().checkAuthentication(user)) { 
                 layout.removeAllComponents();
+                
                 mainUI = new MainUI(this);
+                
                 layout.addComponent(mainUI);
             } else { // user has no xnat password in catalog
                 layout.removeAllComponents();
+                
                 LoginUI loginUI = new LoginUI(this);
+                
                 loginUI.addListener(new Listener() {
-                    @Override
+					private static final long serialVersionUID = -8728443364176948015L;
+
+					@Override
                     public void componentEvent(Event event) { // login failed
                         mainControl.init((User) ((Button) event.getSource()).getData());
                     }
                 });
+                
                 layout.addComponent(new LoginUI(this));
             }
         } else {
@@ -112,8 +120,10 @@ public class MainControl {
 
     public void update() {
         logger.debug("MainControl.update is about to initialize the interface");
+        
         if (mainUI != null) {
             mainUI.init(true);
+            
             logger.debug("MainControl.update finished initialization.");
         }
     }

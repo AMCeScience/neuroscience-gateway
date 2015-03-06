@@ -18,13 +18,9 @@
  */
 package nl.amc.biolab.nsg.display.component;
 
+import nl.amc.biolab.datamodel.objects.User;
 import nl.amc.biolab.nsg.display.VaadinTestApplication;
 import nl.amc.biolab.nsg.display.control.MainControl;
-import nl.amc.biolab.nsg.display.service.UserDataService;
-import nl.amc.biolab.nsgdm.User;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.vaadin.event.ShortcutAction.KeyCode;
 import com.vaadin.ui.Button;
@@ -33,6 +29,7 @@ import com.vaadin.ui.CustomComponent;
 import com.vaadin.ui.Form;
 import com.vaadin.ui.GridLayout;
 import com.vaadin.ui.PasswordField;
+import com.vaadin.ui.TextField;
 
 /**
  * 
@@ -41,13 +38,13 @@ import com.vaadin.ui.PasswordField;
  */
 public class LoginUI extends CustomComponent {
 	private static final long serialVersionUID = 7111231961055959642L;
-	private static Logger logger = LoggerFactory.getLogger(LoginUI.class);
+//	private static Logger logger = LoggerFactory.getLogger(LoginUI.class);
 
 	private VaadinTestApplication app = (VaadinTestApplication) getApplication();
 
 	private GridLayout layout = new GridLayout();
 	private Form form = new Form();
-	private final LoginUI loginUI = this;
+//	private final LoginUI loginUI = this;
 
 	public LoginUI(final MainControl mainControl) {
 		setWidth("100%");
@@ -56,27 +53,37 @@ public class LoginUI extends CustomComponent {
 		layout.setWidth("100%");
 		layout.setHeight("300px");
 		layout.addComponent(form);
+		
 		setCompositionRoot(layout);
 
+		final TextField name = new TextField("Please enter your XNAT username");
 		final PasswordField xnatPassword = new PasswordField("Please enter your XNAT password");
+		
 		xnatPassword.setRequired(true);
+		
+		form.addField("xnatUsername", name);
 		form.addField("xnatPassword", xnatPassword);
 
 		final Button okButton = new Button("ok");
+		
 		okButton.setClickShortcut(KeyCode.ENTER);
 		okButton.addListener(new Button.ClickListener() {
 			private static final long serialVersionUID = -6535226372165482804L;
+
 			public void buttonClick(ClickEvent event) {
 				User user = null;
-				String message = null;
-				user = login((String) xnatPassword.getValue());
+				
+				user = login((String) name.getValue(), (String) xnatPassword.getValue());
 				xnatPassword.setValue("");
+				
 				if (user == null) {
 					return;
 				}
+				
 				okButton.setData(user);
 				mainControl.init(user);
-                                app.getMainWindow().executeJavaScript("window.location.reload();");
+				
+				app.getMainWindow().executeJavaScript("window.location.reload();");
 			}
 		});
 
@@ -87,38 +94,38 @@ public class LoginUI extends CustomComponent {
 	 * 
 	 * @param password
 	 * @return User object if login ok
-	 * @throws nsgdm api RuntimeException if login not ok
 	 */
-	private User login(String password) throws RuntimeException {
+	private User login(String username, String password) {
 		if (app == null) {
 			return null;
 		}
-		
+
 		String screenName = ((com.liferay.portal.model.User) app.getUser()).getScreenName();
-//		Long liferayId = ((com.liferay.portal.model.User) app.getUser()).getUserId();
+		
 		if (screenName == null) {
 			return null;
 		}
-//		app.setUserDataService(screenName, liferayId, false);
-		String message = null;
-		try{
-			app.getUserDataService().setPassword(password);
+		
+		try {
+			app.getUserDataService().setPassword(username, password);
 			app.getUserDataService().xnatLogin();
-//			app.setUserDataService(screenName, liferayId, true);
-		} catch (Exception e) {
-			if (e.getMessage().equals(UserDataService.NO_PASSWORD) || e.getMessage().equals(UserDataService.WRONG_PASSWORD)) {
+		} catch (RuntimeException e) {
+			if (e.getMessage().equals("No Password.") || e.getMessage().equals("Wrong Password.")) {
 				app.getMainWindow().showNotification("Please (re)enter your XNAT password");
+				
 				return null;
 			}
 		}
 
-		return (app.getUserDataService() != null)?app.getUserDataService().getUser():null;
+		return (app.getUserDataService() != null) ? app.getUserDataService().getUser() : null;
 	}
 
 	@Override
 	public void attach() {
 		super.attach();
+		
 		this.app = (VaadinTestApplication) getApplication();
+		
 		if (app.getUser() == null) {
 			layout.removeAllComponents();
 		}
