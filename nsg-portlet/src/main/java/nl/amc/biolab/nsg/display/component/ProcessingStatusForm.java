@@ -219,6 +219,10 @@ class ProcessingStatusForm extends ViewerForm<DisplayProcessingStatus> {
                         download = new Label("No output available", Label.CONTENT_XHTML);
                     } else {
                         for (SubmissionIO submissionIOoutput : outputs) {
+                        	if (!submissionIOoutput.getSubmission().getLastStatus().getValue().equalsIgnoreCase("done")) {
+                        		continue;
+                        	}
+                        	
                         	final DataElement outputElement = submissionIOoutput.getDataElement();
                         	
                         	if (submissionIOoutput.getDataElement().getExisting()) {

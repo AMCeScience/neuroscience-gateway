@@ -18,6 +18,7 @@
  */
 package nl.amc.biolab.nsg.display.service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import nl.amc.biolab.config.exceptions.ReaderException;
 import nl.amc.biolab.config.manager.ConfigurationManager;
 import nl.amc.biolab.datamodel.objects.DataElement;
 import nl.amc.biolab.datamodel.objects.IOPort;
+import nl.amc.biolab.datamodel.objects.Key;
 import nl.amc.biolab.datamodel.objects.Processing;
 import nl.amc.biolab.datamodel.objects.Value;
 import nl.amc.biolab.nsg.display.data.DisplayProcessingStatus;
@@ -139,7 +141,7 @@ public class ProcessingService {
 	            logger.debug("Finding Matching inputs; session URI determined as: " + sessionUri);
 	            
 	            for (IOPort port : processing.getApplication().getInputPorts()) {
-	                if (!port.isVisible()) {    
+	                if (port.getPortNumber() != 1) {    
 	                	// ignore the visible ports that should be filled already by the UI (there should be one visible port, though)
 	                	DataElement el = userDataService.getMatchingInput(sessionUri, port.getDataFormat());
 	                	// NOTE: data element may be null if no match is found; although check is already performed when user selects a BedpostX reconstruction
@@ -161,8 +163,25 @@ public class ProcessingService {
 			
 			// Input
 			inputs.add(_createSubmissionMap(inputPortNumber, de.getResource().getDbId(), de.getName(), de.getURI(), de.getFormat(), de.getType(), de.getSize(), de.getValues()));
+			
+			// Add key value to output
+			Collection<Value> selectedOutputValues = new ArrayList<Value>();
+			
+			for (Value v : de.getValues()) {
+				Key k = v.getKey();
+				
+				if (k.getName().equals("xnat_project_id")
+						|| k.getName().equals("xnat_experiment_id")
+						|| k.getName().equals("xnat_experiment_label")
+						|| k.getName().equals("xnat_subject_id")
+						|| k.getName().equals("xnat_subject_label")
+						|| k.getName().equals("xnat_scan_id")) {
+					selectedOutputValues.add(v);
+				}
+			}
+			
 			// Output
-			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputResource, outputData.get("name"), outputData.get("uri"), outputPort.getDataFormat(), outputPort.getDataType(), null, null));
+			outputs.add(_createSubmissionMap(outputPort.getPortNumber(), outputResource, outputData.get("name"), outputData.get("uri"), outputPort.getDataFormat(), "Recon " + appName, null, selectedOutputValues));
 			
 			submissionIO.put("inputs", inputs);
 			submissionIO.put("outputs", outputs);
@@ -369,23 +388,4 @@ public class ProcessingService {
 	public void shutdown() {
 		// TODO processingManager.shutdown();
 	}
-	//
-	// private String getStatus(Processing processing) {
-	// HashMap<String, Integer> map = new HashMap();
-	// for (Submission sub:processing.getSubmissions()) {
-	// final String subStatus = sub.getStatus();
-	// if (map.containsKey(subStatus)) {
-	// map.put(subStatus, new Integer(map.get(subStatus)+1));
-	// } else {
-	// map.put(subStatus, new Integer(1));
-	// }
-	// }
-	// StringBuffer statusSummary = new StringBuffer();
-	// for (String aStatus : map.keySet()) {
-	// statusSummary.append(map.get(aStatus)).append(" ").append(aStatus).append("; ");
-	// }
-	// final int length = statusSummary.length();
-	// if (length<3) return "No Submissions";
-	// return statusSummary.substring(0, length-2);
-	// }
 }
