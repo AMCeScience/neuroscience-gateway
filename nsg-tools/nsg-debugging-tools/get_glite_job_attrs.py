@@ -294,14 +294,14 @@ def get_job_info(jobids):
     re_tsubmit = re.compile('^\s*Submitted:\s+(.*\S)\s*$')
 
     ## from glite UI version 1.5.14, the attribute 'Node Name:' is no longer available
-    ## for distinguishing master and node jobs. A new way has to be applied.
+    ## for distinguishing main and node jobs. A new way has to be applied.
     #re_name = re.compile('^\s*Node Name:\s+(.*\S)\s*$')
     re_exit = re.compile('^\s*Exit code:\s+(.*\S)\s*$')
     re_reason = re.compile('^\s*Status Reason:\s+(.*\S)\s*$')
     re_dest = re.compile('^\s*Destination:\s+(.*\S)\s*$')
 
-    ## pattern to distinguish master and node jobs
-    re_master = re.compile('^BOOKKEEPING INFORMATION:\s*$')
+    ## pattern to distinguish main and node jobs
+    re_main = re.compile('^BOOKKEEPING INFORMATION:\s*$')
     re_node   = re.compile('^- Nodes information.*\s*$')
 
     ## pattern for node jobs (only meaninful for gLite bulk job submission)
@@ -312,21 +312,21 @@ def get_job_info(jobids):
     pat_times = {'last_update':'Lastupdatetime'}
 
     info = []
-    is_master = False
+    is_main = False
     is_node   = False
     #node_cnt  = 0
     for line in output.split('\n'):
 
-        match = re_master.match(line)
+        match = re_main.match(line)
         if match:
-            is_master = True
+            is_main = True
             is_node   = False
             #node_cnt  = 0
             continue
 
         match = re_node.match(line)
         if match:
-            is_master = False
+            is_main = False
             is_node   = True
             continue
 
